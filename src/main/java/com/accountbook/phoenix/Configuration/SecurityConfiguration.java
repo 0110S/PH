@@ -24,7 +24,9 @@ import java.util.List;
 public class SecurityConfiguration {
 
     public static final String[] whitelistUrls = {"/api/**"};
+
     private final JwtAuthFilter jwtFilter;
+
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -53,9 +55,8 @@ public class SecurityConfiguration {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

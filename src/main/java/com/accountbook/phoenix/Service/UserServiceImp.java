@@ -1,10 +1,7 @@
 package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.JwtService;
-import com.accountbook.phoenix.DTO.LoginRequest;
-import com.accountbook.phoenix.DTO.MessageResponse;
-import com.accountbook.phoenix.DTO.ResourceResponse;
-import com.accountbook.phoenix.DTO.UserRequest;
+import com.accountbook.phoenix.DTO.*;
 import com.accountbook.phoenix.Entity.User;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.UserFoundException;
@@ -14,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,10 +32,9 @@ public class UserServiceImp implements UserService {
     AuthenticationManager authenticationManager;
 
     @Override
-    public ResponseEntity<MessageResponse> userRegistration(UserRequest userRequest) {
+    public ResponseEntity<RegistrationResponse> userRegistration(UserRequest userRequest) {
         try {
             User user = (User) userRepository.findByEmail(userRequest.getEmail());
-
             if (user != null) {
                 throw new UserFoundException("user already exists");
             }
@@ -53,15 +48,27 @@ public class UserServiceImp implements UserService {
                     .password(passwordEncoder.encode(userRequest.getPassword()))
                     .build();
             userRepository.save(newUser);
-            return ResponseEntity.ok(new MessageResponse(true, newUser));
+            UserData userData = new UserData();
+            userData.setFirstName(newUser.getFirstName());
+            userData.setLastName(newUser.getLastName());
+            userData.setUserName(newUser.getUsername());
+            userData.setEmail(newUser.getEmail());
+            userData.setMobileNumber(newUser.getMobileNumber());
+
+            RegistrationResponse userDtoResponse = new RegistrationResponse();
+            userDtoResponse.setMessage("user signed successfully ");
+            userDtoResponse.setResponse(userData);
+
+            return ResponseEntity.ok(userDtoResponse);
         } catch (UserFoundException exception) {
-            return ResponseEntity.badRequest().body(
-                    new MessageResponse(false, userRequest.getEmail() + " already exists"));
+            RegistrationResponse userDtoResponse = new RegistrationResponse();
+            userDtoResponse.setMessage("user already exists");
+            return ResponseEntity.badRequest().body(userDtoResponse);
         }
     }
 
     @Override
-    public ResponseEntity<ResourceResponse> userLogin(LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponse> userLogin(LoginRequest loginRequest) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(), loginRequest.getPassword()
@@ -72,15 +79,24 @@ public class UserServiceImp implements UserService {
             if (user == null) {
                 throw new InvalidUserException("user not found");
             }
-            String accessToken = jwtService.generateAccessToken( user);
-            String refreshToken = "";
-            return ResponseEntity.ok(new ResourceResponse(true, accessToken, refreshToken));
+            String accessToken = jwtService.generateAccessToken(user);
+
+            UserData userData = new UserData();
+            userData.setFirstName(user.getFirstName());
+            userData.setLastName(user.getLastName());
+            userData.setUserName(user.getUsername());
+            userData.setEmail(user.getEmail());
+            userData.setMobileNumber(user.getMobileNumber());
+
+            LoginResponse userDtoResponse = new LoginResponse();
+            userDtoResponse.setMessage("Login Successfully ");
+            userDtoResponse.setAccessToken(accessToken);
+            userDtoResponse.setUserResponse(userData);
+            return ResponseEntity.ok(userDtoResponse);
         } catch (InvalidUserException exception) {
-            ResourceResponse response = ResourceResponse.builder()
-                    .status(false)
-                    .accessToken("user not found")
-                    .build();
-            return ResponseEntity.badRequest().body(response);
+          LoginResponse loginResponse = new LoginResponse();
+          loginResponse.setMessage("invalid user ");
+            return ResponseEntity.badRequest().body(loginResponse);
         }
     }
 

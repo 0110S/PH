@@ -10,4 +10,6 @@ public interface CommentService {
     ResponseEntity<MessageResponse> addCommentToComment(CommentRequest commentRequest);
 
     ResponseEntity<MessageResponse> deleteComment(int postId, int commentId);
+
+    ResponseEntity<MessageResponse> getAllComments(int id);
 }

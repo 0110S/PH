@@ -9,9 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ResourceResponse {
-
-    private boolean status;
-    private String accessToken;
-    private String response;
+public class UserData {
+    private String firstName;
+    private String lastName;
+    private String userName;
+    private String mobileNumber;
+    private String email;
 }
+

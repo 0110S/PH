@@ -28,4 +28,8 @@ public class CommentController {
     public ResponseEntity<MessageResponse> deleteComment(@RequestParam ("postId") int postId,@RequestParam ("commentId") int commentId){
         return commentService.deleteComment(postId,commentId);
     }
+    @GetMapping("/allComments")
+    public ResponseEntity<MessageResponse> getAllComments(@RequestParam ("postId") int id){
+        return commentService.getAllComments(id);
+    }
 }

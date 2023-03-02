@@ -5,15 +5,18 @@ import com.accountbook.phoenix.DTO.CommentRequest;
 import com.accountbook.phoenix.DTO.MessageResponse;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
+import com.accountbook.phoenix.Entity.User;
 import com.accountbook.phoenix.Exception.CommentNotFoundException;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.PostNotFoundException;
 import com.accountbook.phoenix.Repository.CommentRepository;
 import com.accountbook.phoenix.Repository.PostRepository;
+import com.accountbook.phoenix.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,6 +26,8 @@ public class CommentServiceImp implements CommentService {
     private final CommentRepository commentRepository;
 
     private final PostRepository postRepository;
+
+    private final UserRepository userRepository;
 
     private final Utils utils;
 
@@ -42,6 +47,7 @@ public class CommentServiceImp implements CommentService {
             if (comment.getUser() == null) {
                 throw new InvalidUserException("user not found");
             }
+
             commentRepository.save(comment);
             return ResponseEntity.ok(new MessageResponse(true, comment));
         } catch (PostNotFoundException e) {
@@ -93,6 +99,27 @@ public class CommentServiceImp implements CommentService {
             return ResponseEntity.badRequest().body(new MessageResponse(false, commentId));
         } catch (InvalidUserException exception) {
             return ResponseEntity.badRequest().body(new MessageResponse(false, "user not found"));
+        }
+    }
+
+    @Override
+    public ResponseEntity<MessageResponse> getAllComments(int id) {
+        try {
+            Optional<User> user = userRepository.findById(utils.getUser().getId());
+            if (user.isEmpty()) {
+                throw new InvalidUserException("user not found ");
+            }
+
+            Optional<Post> post = postRepository.findById(id);
+            if (post.isEmpty()) {
+                throw new PostNotFoundException("post not found ");
+            }
+            List<Comment> comments = commentRepository.findAllByRefIdAndRefType(id,"comment");
+            return ResponseEntity.ok(new MessageResponse(true, "response: " + comments));
+        } catch (InvalidUserException exception) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, " user not found"));
+        } catch (PostNotFoundException exception) {
+            return ResponseEntity.badRequest().body(new MessageResponse(false, "post not found "));
         }
     }
 }
