@@ -1,7 +1,7 @@
 package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.DTO.CommentRequest;
-import com.accountbook.phoenix.DTO.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface CommentService {

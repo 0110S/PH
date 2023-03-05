@@ -1,6 +1,5 @@
 package com.accountbook.phoenix.Controller;
 
-import com.accountbook.phoenix.DTO.MessageResponse;
 import com.accountbook.phoenix.DTO.PostRequest;
 import com.accountbook.phoenix.DTO.PostResponse;
 import com.accountbook.phoenix.Service.PostService;

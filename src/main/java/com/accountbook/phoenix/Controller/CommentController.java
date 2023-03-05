@@ -2,7 +2,7 @@ package com.accountbook.phoenix.Controller;
 
 
 import com.accountbook.phoenix.DTO.CommentRequest;
-import com.accountbook.phoenix.DTO.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.accountbook.phoenix.Service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/comment")
+@CrossOrigin("*")
 public class CommentController {
     private final CommentService commentService;
 

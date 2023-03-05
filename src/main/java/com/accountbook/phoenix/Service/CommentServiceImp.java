@@ -2,7 +2,7 @@ package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTO.CommentRequest;
-import com.accountbook.phoenix.DTO.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,9 +48,15 @@ public class CommentServiceImp implements CommentService {
             if (comment.getUser() == null) {
                 throw new InvalidUserException("user not found");
             }
-
             commentRepository.save(comment);
-            return ResponseEntity.ok(new MessageResponse(true, comment));
+
+            List<Object> existingPost= post.
+                    stream()
+                    .map(post1 -> post1.getPost() + post1.getUser().getFirstName() + post1.getUser().getLastName() + post1.getUser().getEmail())
+                    .collect(Collectors.toList());
+
+
+            return ResponseEntity.ok(new MessageResponse(true, existingPost));
         } catch (PostNotFoundException e) {
             return ResponseEntity.badRequest().body(new MessageResponse(false, commentRequest.getRefId() + " not found"));
         } catch (InvalidUserException e) {
@@ -114,7 +121,7 @@ public class CommentServiceImp implements CommentService {
             if (post.isEmpty()) {
                 throw new PostNotFoundException("post not found ");
             }
-            List<Comment> comments = commentRepository.findAllByRefIdAndRefType(id,"comment");
+            List<Comment> comments = commentRepository.findAllByRefIdAndRefType(id, "comment");
             return ResponseEntity.ok(new MessageResponse(true, "response: " + comments));
         } catch (InvalidUserException exception) {
             return ResponseEntity.badRequest().body(new MessageResponse(false, " user not found"));

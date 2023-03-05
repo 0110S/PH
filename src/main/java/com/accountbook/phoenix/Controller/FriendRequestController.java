@@ -1,7 +1,8 @@
 package com.accountbook.phoenix.Controller;
 
 import com.accountbook.phoenix.DTO.FriendRequestDto;
-import com.accountbook.phoenix.DTO.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Service.FriendRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,11 +11,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/request")
+@CrossOrigin("*")
 public class FriendRequestController {
     private final FriendRequestService friendRequestService;
 
     @PostMapping("/addFriend")
-    public ResponseEntity<MessageResponse> addFriend(@RequestBody FriendRequestDto friendRequestDto) {
+    public ResponseEntity<UserResponse> addFriend(@RequestBody FriendRequestDto friendRequestDto) {
         return friendRequestService.addFriend(friendRequestDto);
     }
 
