@@ -18,5 +18,6 @@ public class UserData {
     private String mobileNumber;
     private String email;
     private File profilePic;
+    private  boolean follow;
 }
 

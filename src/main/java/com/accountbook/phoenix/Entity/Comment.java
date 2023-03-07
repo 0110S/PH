@@ -18,7 +18,10 @@ public class Comment {
     private int refId;
     private String refType;
     private String comment;
-    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @Column(nullable = true)
+    private int commentCount;
+
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_user")
     private User user;
 }

@@ -43,6 +43,7 @@ public class CommentServiceImp implements CommentService {
                     .comment(commentRequest.getComment())
                     .refId(commentRequest.getRefId())
                     .refType(commentRequest.getRefType())
+                    .commentCount(+1)
                     .user(utils.getUser())
                     .build();
             if (comment.getUser() == null) {
@@ -54,13 +55,11 @@ public class CommentServiceImp implements CommentService {
                     stream()
                     .map(post1 -> post1.getPost() + post1.getUser().getFirstName() + post1.getUser().getLastName() + post1.getUser().getEmail())
                     .collect(Collectors.toList());
-
-
-            return ResponseEntity.ok(new MessageResponse(true, existingPost));
+            return ResponseEntity.ok(new MessageResponse("success", existingPost));
         } catch (PostNotFoundException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, commentRequest.getRefId() + " not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getRefId() + " not found"));
         } catch (InvalidUserException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, commentRequest + "user not found "));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest + "user not found "));
         }
     }
 
@@ -78,9 +77,9 @@ public class CommentServiceImp implements CommentService {
                     .refType(commentRequest.getRefType())
                     .build();
             commentRepository.save(newComment);
-            return ResponseEntity.ok(new MessageResponse(true, comment));
+            return ResponseEntity.ok(new MessageResponse("true", comment));
         } catch (CommentNotFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, commentRequest.getRefId() + " not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getRefId() + " not found"));
         }
     }
 
@@ -99,13 +98,13 @@ public class CommentServiceImp implements CommentService {
                 throw new InvalidUserException(" user not found");
             }
             commentRepository.delete(comment.get());
-            return ResponseEntity.ok(new MessageResponse(true, comment.get().getId() + "successfully deleted"));
+            return ResponseEntity.ok(new MessageResponse("true", comment.get().getId() + "successfully deleted"));
         } catch (PostNotFoundException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, postId));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", postId));
         } catch (CommentNotFoundException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, commentId));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", commentId));
         } catch (InvalidUserException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, "user not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", "user not found"));
         }
     }
 
@@ -121,12 +120,12 @@ public class CommentServiceImp implements CommentService {
             if (post.isEmpty()) {
                 throw new PostNotFoundException("post not found ");
             }
-            List<Comment> comments = commentRepository.findAllByRefIdAndRefType(id, "comment");
-            return ResponseEntity.ok(new MessageResponse(true, "response: " + comments));
+            List<Comment> comments = commentRepository.findAllByRefId(id);
+            return ResponseEntity.ok(new MessageResponse("true", "response: " + comments));
         } catch (InvalidUserException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, " user not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", " user not found"));
         } catch (PostNotFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse(false, "post not found "));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", "post not found "));
         }
     }
 }

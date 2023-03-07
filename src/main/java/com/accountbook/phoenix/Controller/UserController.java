@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/")
+@CrossOrigin("*")
 public class UserController {
 
     private final UserService userService;
@@ -40,5 +41,10 @@ public class UserController {
     @PostMapping("profilePic")
     public ResponseEntity<UserResponse> setProfilePic(@RequestParam MultipartFile file) {
         return userService.setProfilePic(file);
+    }
+
+    @GetMapping("profile")
+    public ResponseEntity<?> getProfile(){
+        return userService.profile();
     }
 }

@@ -15,4 +15,6 @@ public interface UserService {
     ResponseEntity<MessageResponse> fetchAllUsers();
 
     ResponseEntity<UserResponse> setProfilePic(MultipartFile file);
+
+    ResponseEntity<?> profile();
 }

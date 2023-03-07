@@ -5,22 +5,20 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.io.File;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class PostData {
-
-    private LocalDateTime localDateTime;
-    private String post;
-    private String firstname;
+@NoArgsConstructor
+public class ProfileResponse {
+    private String firstName;
     private String lastName;
     private String userName;
-    private String email;
     private String mobileNumber;
-    private boolean like;
-    private int likeCount;
-    private List<ObjectNode>  comments;
+    private String email;
+    private File profilePic;
+    private int followerCount;
+    private int followingCount;
+    private long postCOUNT;
 }

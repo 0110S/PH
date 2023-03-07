@@ -1,5 +1,6 @@
 package com.accountbook.phoenix.Configuration;
 
+import com.accountbook.phoenix.Exception.InvalidUserException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,11 +40,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         userEmail = jwtService.extractUserName(jwt);
 
         if (userEmail == null) {
-            throw new Exception("user not found");
+            throw new InvalidUserException("user not found");
         }
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            if(userDetails == null){
+                throw  new InvalidUserException("user not found ");
+            }
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities()

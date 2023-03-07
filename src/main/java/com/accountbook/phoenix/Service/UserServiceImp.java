@@ -2,16 +2,23 @@ package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.JwtService;
 import com.accountbook.phoenix.Configuration.Utils;
-import com.accountbook.phoenix.DTO.*;
+import com.accountbook.phoenix.DTO.LoginRequest;
+import com.accountbook.phoenix.DTO.UserData;
+import com.accountbook.phoenix.DTO.UserRequest;
 import com.accountbook.phoenix.DTOResponse.LoginResponse;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.ProfileResponse;
 import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
+import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.UserFoundException;
 import com.accountbook.phoenix.Repository.FriendRequestRepository;
+import com.accountbook.phoenix.Repository.PostRepository;
 import com.accountbook.phoenix.Repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -40,6 +49,8 @@ public class UserServiceImp implements UserService {
 
     private final UserRepository userRepository;
 
+    private final PostRepository postRepository;
+
     private final Utils utils;
 
     private final FriendRequestRepository friendRequestRepository;
@@ -50,7 +61,7 @@ public class UserServiceImp implements UserService {
     @Override
     public ResponseEntity<UserResponse> userRegistration(UserRequest userRequest) {
         try {
-            log.info(""+userRequest);
+            log.info("" + userRequest);
             Optional<User> user = userRepository.findByEmail(userRequest.getEmail());
             if (user.isPresent()) {
                 throw new UserFoundException("user already exists");
@@ -93,10 +104,10 @@ public class UserServiceImp implements UserService {
                 )
         );
         try {
-        Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
-        if (!user.isPresent()) {
-            throw new InvalidUserException("username or password is not valid ");
-        }
+            Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
+            if (!user.isPresent()) {
+                throw new InvalidUserException("username or password is not valid ");
+            }
             String accessToken = jwtService.generateAccessToken(user.get());
 
             UserData userData = new UserData();
@@ -115,6 +126,32 @@ public class UserServiceImp implements UserService {
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.setMessage("invalid user ");
             return ResponseEntity.badRequest().body(loginResponse);
+        }
+    }
+
+
+    public ResponseEntity<?> profile() {
+        try {
+            User user = utils.getUser();
+            if (user == null) {
+                throw new Exception("");
+            }
+
+            long posts = postRepository.count();
+            ProfileResponse userData = new ProfileResponse();
+            userData.setFirstName(user.getFirstName());
+            userData.setLastName(user.getLastName());
+            userData.setUserName(user.getUsername());
+            userData.setEmail(user.getEmail());
+            userData.setMobileNumber(user.getMobileNumber());
+            userData.setProfilePic(user.getProfilePic());
+            userData.setFollowerCount(user.getFollower());
+            userData.setFollowingCount(user.getFollowing());
+            userData.setPostCOUNT(posts);
+
+            return ResponseEntity.ok(userData);
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -142,22 +179,75 @@ public class UserServiceImp implements UserService {
                     nonFriends.add(user);
                 }
             }
-            nonFriends
+            List<ObjectNode> not = nonFriends
                     .stream()
-                    .map(user -> user.getFirstName()+""+user.getLastName());
+                    .map(user -> {
+                        ObjectNode userNode = new ObjectMapper().createObjectNode();
+                        userNode.put("userId", user.getId());
+                        userNode.put("firstName", user.getFirstName());
+                        userNode.put("lastName", user.getLastName());
+                        userNode.put("userName", user.getUsername());
+                        userNode.put("email", user.getEmail());
+                        userNode.put("profilePic", String.valueOf(user.getProfilePic()));
+                        userNode.put("following", user.isFollow());
+                        return userNode;
+                    }).collect(Collectors.toList());
 
-            UserData userData = new UserData();
-            userData.setFirstName(existingUser.get().getFirstName());
-            userData.setLastName(existingUser.get().getLastName());
-            userData.setUserName(existingUser.get().getUsername());
-            userData.setEmail(existingUser.get().getEmail());
-            userData.setMobileNumber(existingUser.get().getMobileNumber());
+
+            LoginResponse userDtoResponse = new LoginResponse();
+            return ResponseEntity.ok(new MessageResponse("not friends ", not));
+        } catch (InvalidUserException exception) {
+
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+    public ResponseEntity<?> fetchAllUsersPosts() {
+        try {
+            Optional<User> existingUser = userRepository.findById(utils.getUser().getId());
+            if (existingUser.isEmpty()) {
+                throw new InvalidUserException("user not found");
+            }
+
+            List<User> users = userRepository.findAll();
+            List<FriendRequest> friends = friendRequestRepository.findByUser(existingUser.get());
+
+
+            List<User> friendUsers = friends.stream()
+                    .flatMap(fr -> Stream.of(fr.getUser(), fr.getFriend()))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            List<Post> friendPosts = friendUsers.stream()
+                    .map(u -> postRepository.findByUser(u))
+                    .collect(Collectors.toList());
+
+            friendPosts.stream()
+                    .map(post -> {
+                        ObjectNode userNode = new ObjectMapper().createObjectNode();
+                        userNode.put("postId", post.getId());
+                        userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
+                        userNode.put("firstName", post.getUser().getFirstName());
+                        userNode.put("lastName", post.getUser().getLastName());
+                        userNode.put("email", post.getUser().getEmail());
+                        userNode.put("userName", post.getUser().getUsername());
+                        userNode.put("mobileNumber", post.getUser().getMobileNumber());
+                        userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
+                        userNode.put("like", post.isLike());
+                        userNode.put("likeCount", post.getLikeCount());
+                        int commentCount = 0;
+                        if (post.getComment() != null) {
+                            commentCount = post.getComment().getCommentCount();
+                        }
+                        userNode.put("commentCount", commentCount);
+                        return userNode;
+                    }).collect(Collectors.toList());
+
 
             LoginResponse userDtoResponse = new LoginResponse();
             userDtoResponse.setMessage("Login Successfully ");
-//            userDtoResponse.setAccessToken(accessToken);
-            userDtoResponse.setUserResponse(userData);
-            return ResponseEntity.ok(new MessageResponse(true,nonFriends));
+            return ResponseEntity.ok(new MessageResponse("post found", friendPosts));
         } catch (InvalidUserException exception) {
 
             return ResponseEntity.notFound().build();

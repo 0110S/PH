@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -14,9 +16,25 @@ import lombok.NoArgsConstructor;
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  int id ;
+    private int id;
     private String post;
-    @ManyToOne(fetch =FetchType.EAGER,cascade = CascadeType.MERGE)
+    private LocalDateTime localDateTime;
+    private boolean like = false;
+    private boolean dislike = false;
+    private int likeCount = 0;
+    private int dislikeCount = 0;
+    private int postCount = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_post")
-    private  User user;
+    private User user;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "reacted_user", nullable = true, referencedColumnName = "id")
+    private User reactedUser;
+
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment", nullable = true,referencedColumnName = "id")
+    private Comment comment;
+
 }

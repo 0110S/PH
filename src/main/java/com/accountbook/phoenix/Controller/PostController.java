@@ -1,8 +1,11 @@
 package com.accountbook.phoenix.Controller;
 
 import com.accountbook.phoenix.DTO.PostRequest;
-import com.accountbook.phoenix.DTO.PostResponse;
+import com.accountbook.phoenix.DTOResponse.LikeDto;
+import com.accountbook.phoenix.DTOResponse.PResponse;
+import com.accountbook.phoenix.DTOResponse.PostResponse;
 import com.accountbook.phoenix.Service.PostService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user/")
+@CrossOrigin("*")
+
 public class PostController {
 
     private final PostService postService;
@@ -25,12 +30,20 @@ public class PostController {
     }
 
     @GetMapping("/getPost")
-    ResponseEntity<PostResponse> getPost(@RequestParam ("postId") int id){
+    ResponseEntity<?> getPost(@RequestParam ("postId") int id){
         return postService.fetchPostById(id);
     }
 
+    @PutMapping("toggleLike")
+    ResponseEntity<?> toggleSwitch(LikeDto likeDto){
+        return postService.likePost(likeDto);
+    }
     @GetMapping("/allPosts")
-    ResponseEntity<PostResponse> getAllPosts(){
+    ResponseEntity<String> getAllPosts() throws JsonProcessingException {
         return postService.getAllPosts();
+    }
+    @GetMapping("/getAllFriendsPost")
+    ResponseEntity<?> getAllFriendsPost(){
+        return postService.getAllFriendsPost();
     }
 }
