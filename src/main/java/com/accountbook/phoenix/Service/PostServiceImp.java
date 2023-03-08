@@ -92,7 +92,6 @@ public class PostServiceImp implements PostService {
             if (existingPost.get().getUser().getId() != user.getId()) {
                 throw new InvalidUserException("user has no authority to delete post");
             }
-            postRepository.delete(existingPost.get());
             List<Comment> comment = commentRepository.findAllByRefId(id);
             List<ObjectNode> allComments = comment.stream()
                     .filter(comment1 -> comment1.getRefType().equals("post"))
@@ -101,7 +100,7 @@ public class PostServiceImp implements PostService {
                         userNode.put("comments", comments.getComment());
                         return userNode;
                     }).collect(Collectors.toList());
-
+            postRepository.delete(existingPost.get());
             List<Post> posts = postRepository.findAllPostsByUser(user);
             List<ObjectNode> allPosts = posts.stream().map(post -> {
                 ObjectNode userNode = new ObjectMapper().createObjectNode();

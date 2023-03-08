@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/api/user/")
 @CrossOrigin("*")
-
 public class PostController {
 
     private final PostService postService;
