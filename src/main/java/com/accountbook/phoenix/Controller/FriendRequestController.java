@@ -16,7 +16,7 @@ public class FriendRequestController {
     private final FriendRequestService friendRequestService;
 
     @PostMapping("/addFriend")
-    public ResponseEntity<UserResponse> addFriend(@RequestBody FriendRequestDto friendRequestDto) {
+    public ResponseEntity<?> addFriend(@RequestBody FriendRequestDto friendRequestDto) {
         return friendRequestService.addFriend(friendRequestDto);
     }
 

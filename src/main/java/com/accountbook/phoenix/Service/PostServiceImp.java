@@ -100,27 +100,28 @@ public class PostServiceImp implements PostService {
                         userNode.put("comments", comments.getComment());
                         return userNode;
                     }).collect(Collectors.toList());
+
             postRepository.delete(existingPost.get());
-            List<Post> posts = postRepository.findAllPostsByUser(user);
+            log.info("working");
+            List<Post> posts = postRepository.findAllPostsByUser(existingPost.get().getUser());
+
             List<ObjectNode> allPosts = posts.stream().map(post -> {
                 ObjectNode userNode = new ObjectMapper().createObjectNode();
-                userNode.put("message","posts ");
-                userNode.put("postId",post.getId());
+                userNode.put("message", "posts ");
+                userNode.put("postId", post.getId());
                 userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                 userNode.put("post", post.getPost());
                 userNode.put("firstName", post.getUser().getFirstName());
                 userNode.put("lastName", post.getUser().getLastName());
                 userNode.put("userName", post.getUser().getUsername());
                 userNode.put("email", post.getUser().getEmail());
-                userNode.put("like",post.isLike());
+                userNode.put("like", post.isLike());
                 userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
                 userNode.put("mobileNumber", post.getUser().getMobileNumber());
                 userNode.put("likeCount", post.getLikeCount());
                 userNode.put("commentCount", allComments.stream().count());
                 return userNode;
             }).collect(Collectors.toList());
-
-
             return ResponseEntity.ok(allPosts);
         } catch (PostNotFoundException | InvalidUserException e) {
             PostResponse postResponse = new PostResponse();
@@ -229,7 +230,6 @@ public class PostServiceImp implements PostService {
                     }).collect(Collectors.toList());
 
 
-//            log.info("like: "+likeDto.isLike());
             boolean isAlreadyLiked = existingPost.get().isLike();
             boolean isLiking = true;
 
@@ -238,20 +238,20 @@ public class PostServiceImp implements PostService {
                 log.info("Disliking post...");
                 existingPost.get().setLike(false);
                 existingPost.get().setLikeCount(Math.max(0, existingPost.get().getLikeCount() - 1));
-                existingPost.get().setReactedUser(null);
+                existingPost.get().setReactedUserId(0);
                 postRepository.save(existingPost.get());
-                List<Post> posts = postRepository.findAllPostsByUser(user);
+                List<Post> posts = postRepository.findAllPostsByUser(existingPost.get().getUser());
                 List<ObjectNode> allPosts = posts.stream().map(post -> {
                     ObjectNode userNode = new ObjectMapper().createObjectNode();
-                    userNode.put("message","posts ");
-                    userNode.put("postId",post.getId());
+                    userNode.put("message", "posts ");
+                    userNode.put("postId", post.getId());
                     userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                     userNode.put("post", post.getPost());
                     userNode.put("firstName", post.getUser().getFirstName());
                     userNode.put("lastName", post.getUser().getLastName());
                     userNode.put("userName", post.getUser().getUsername());
                     userNode.put("email", post.getUser().getEmail());
-                    userNode.put("like",post.isLike());
+                    userNode.put("like", post.isLike());
                     userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
                     userNode.put("mobileNumber", post.getUser().getMobileNumber());
                     userNode.put("likeCount", post.getLikeCount());
@@ -266,13 +266,14 @@ public class PostServiceImp implements PostService {
                 log.info("Liking post...");
                 existingPost.get().setLike(true);
                 existingPost.get().setLikeCount(existingPost.get().getLikeCount() + 1);
-                existingPost.get().setReactedUser(user);
+                existingPost.get().setReactedUserId(user.getId());
                 postRepository.save(existingPost.get());
-                List<Post> posts = postRepository.findAllPostsByUser(user);
+                List<Post> posts = postRepository.findAllPostsByUser(existingPost.get().getUser());
+                log.info("posts bigilu "+posts);
                 List<ObjectNode> allPosts = posts.stream().map(post -> {
                     ObjectNode userNode = new ObjectMapper().createObjectNode();
-                    userNode.put("message","posts ");
-                    userNode.put("postId",post.getId());
+                    userNode.put("message", "posts ");
+                    userNode.put("postId", post.getId());
                     userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                     userNode.put("post", post.getPost());
                     userNode.put("firstName", post.getUser().getFirstName());
@@ -280,7 +281,7 @@ public class PostServiceImp implements PostService {
                     userNode.put("userName", post.getUser().getUsername());
                     userNode.put("email", post.getUser().getEmail());
                     userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
-                    userNode.put("like",post.isLike());
+                    userNode.put("like", post.isLike());
                     userNode.put("mobileNumber", post.getUser().getMobileNumber());
                     userNode.put("likeCount", post.getLikeCount());
                     userNode.put("commentCount", allComments.stream().count());

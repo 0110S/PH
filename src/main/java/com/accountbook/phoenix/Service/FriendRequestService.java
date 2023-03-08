@@ -3,7 +3,6 @@ package com.accountbook.phoenix.Service;
 import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTO.FriendRequestDto;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
-import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.User;
 import com.accountbook.phoenix.Exception.InvalidUserException;
@@ -32,25 +31,39 @@ public class FriendRequestService {
     private final Utils utils;
 
 
-    public ResponseEntity<UserResponse> addFriend(FriendRequestDto friendRequestDto) {
-//        try {
-//            Optional<User> existingUser = userRepository.findById(friendRequestDto.getUserId());
-//            if (existingUser.isEmpty()) {
-//                throw new InvalidUserException("user not found");
-//            }
-//             User user= utils.getUser();
-//            if (user.getId() == user.get().getId()) {
-//                throw new InvalidUserException("user and friend cannot be the same");
-//            }
-//
-//            FriendRequest friendRequest = new FriendRequest();
-//            Optional<FriendRequest> existingFriendRequest = friendRequestRepository.findByUserAndFriend(utils.getUser(),user.get());
-//            if(existingFriendRequest.isEmpty()) {
-//                friendRequest.setUser();
-//                friendRequest.setFriend(user.get());
-//
-//            }
+    public ResponseEntity<?> addFriend(FriendRequestDto friendRequestDto) {
+        try {
+            log.info("in the method ");
+            Optional<User> existingUser = userRepository.findById(friendRequestDto.getUserId());
+            if (existingUser.isEmpty()) {
+                throw new InvalidUserException("user not found");
+            }
+            log.info("after user");
+            User user = utils.getUser();
+            if (user.getId() == existingUser.get().getId()) {
+                throw new InvalidUserException("user and friend cannot be the same");
+            }
 
+            Optional<FriendRequest> existingFriendRequest = friendRequestRepository.findByUserAndFriend(utils.getUser(), user);
+            if (existingFriendRequest.isEmpty() && existingFriendRequest.get().isFollowing()) {
+                user.setFriend(false);
+                log.info("if friends");
+                userRepository.save(user);
+                friendRequestRepository.delete(existingFriendRequest.get());
+                return ResponseEntity.ok("no following "+existingUser.get());
+            }
+            log.info("if nor friends");
+            existingFriendRequest.get().setFollowing(true);
+            existingFriendRequest.get().setFriend(existingUser.get());
+            existingFriendRequest.get().setUser(user);
+            user.setFriend(true);
+            userRepository.save(existingUser.get());
+            friendRequestRepository.save(existingFriendRequest.get());
+            return ResponseEntity.ok("follow "+existingFriendRequest.get());
+        } catch (Exception exception) {
+            return null;
+        }
+    }
 //            boolean isFollowing = existingFriendRequest.isPresent() && existingFriendRequest.get().isFollowing();
 //            boolean isUnfollowing = existingFriendRequest.isPresent() && !existingFriendRequest.get().isFollowing();
 //
@@ -102,48 +115,47 @@ public class FriendRequestService {
 //            return ResponseEntity.badRequest().body(userResponse);
 //        }
 //    }
-        return null;
-    }
 
-        public ResponseEntity<MessageResponse> listOfFriends () {
-            try {
-                List<FriendRequest> following = friendRequestRepository.findByUser(utils.getUser());
 
-                List<ObjectNode> friendIds = following.stream()
-                        .map(user -> {
-                            ObjectNode userNode = new ObjectMapper().createObjectNode();
-                            userNode.put("firstName", user.getFriend().getFirstName());
-                            userNode.put("lastName", user.getFriend().getLastName());
-                            userNode.put("email", user.getFriend().getEmail());
-                            return userNode;
-                        }).collect(Collectors.toList());
+    public ResponseEntity<MessageResponse> listOfFriends() {
+        try {
+            List<FriendRequest> following = friendRequestRepository.findByUser(utils.getUser());
 
-                if (friendIds.isEmpty()) {
-                    return ResponseEntity.ok(new MessageResponse("true", "no followers found"));
-                }
-                return ResponseEntity.ok(new MessageResponse("true", friendIds));
+            List<ObjectNode> friendIds = following.stream()
+                    .map(user -> {
+                        ObjectNode userNode = new ObjectMapper().createObjectNode();
+                        userNode.put("firstName", user.getFriend().getFirstName());
+                        userNode.put("lastName", user.getFriend().getLastName());
+                        userNode.put("email", user.getFriend().getEmail());
+                        return userNode;
+                    }).collect(Collectors.toList());
+
+            if (friendIds.isEmpty()) {
+                return ResponseEntity.ok(new MessageResponse("true", "no followers found"));
+            }
+            return ResponseEntity.ok(new MessageResponse("true", friendIds));
 //            return ResponseEntity.ok(new MessageResponse(true, following));
-            } catch (Exception exception) {
-                return ResponseEntity.notFound().build();
+        } catch (Exception exception) {
+            return ResponseEntity.notFound().build();
 
-            }
-        }
-
-        public ResponseEntity<MessageResponse> unfriend (FriendRequestDto friendRequestDto){
-            try {
-                Optional<User> user = userRepository.findById(friendRequestDto.getUserId());
-                if (user.isEmpty()) {
-                    throw new InvalidUserException("user not found");
-                }
-                Optional<FriendRequest> friendRequest = friendRequestRepository.findById(friendRequestDto.getUserId());
-
-                if (friendRequest.isEmpty()) {
-                    throw new InvalidUserException("user not found");
-                }
-                friendRequestRepository.delete(friendRequest.get());
-                return ResponseEntity.ok(new MessageResponse("true", "deleted successfully" + friendRequest));
-            } catch (InvalidUserException e) {
-                return ResponseEntity.badRequest().body(new MessageResponse("false", "user not found"));
-            }
         }
     }
+
+    public ResponseEntity<MessageResponse> unfriend(FriendRequestDto friendRequestDto) {
+        try {
+            Optional<User> user = userRepository.findById(friendRequestDto.getUserId());
+            if (user.isEmpty()) {
+                throw new InvalidUserException("user not found");
+            }
+            Optional<FriendRequest> friendRequest = friendRequestRepository.findById(friendRequestDto.getUserId());
+
+            if (friendRequest.isEmpty()) {
+                throw new InvalidUserException("user not found");
+            }
+            friendRequestRepository.delete(friendRequest.get());
+            return ResponseEntity.ok(new MessageResponse("true", "deleted successfully" + friendRequest));
+        } catch (InvalidUserException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("false", "user not found"));
+        }
+    }
+}

@@ -29,12 +29,11 @@ public class Post {
     @JoinColumn(name = "user_post")
     private User user;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "reacted_user", nullable = true, referencedColumnName = "id")
-    private User reactedUser;
+    @JoinColumn (name = "user")
+    private int reactedUserId;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment", nullable = true,referencedColumnName = "id")
+    @JoinColumn(name = "comment", nullable = true, referencedColumnName = "id")
     private Comment comment;
 
 }
