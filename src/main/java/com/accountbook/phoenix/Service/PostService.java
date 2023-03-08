@@ -1,7 +1,6 @@
 package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.DTO.PostRequest;
-import com.accountbook.phoenix.DTOResponse.LikeDto;
 import com.accountbook.phoenix.DTOResponse.PostResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 public interface PostService {
     ResponseEntity<PostResponse> postSomething(PostRequest postRequest);
 
-    ResponseEntity<PostResponse> deletePost(int id);
+    ResponseEntity<?> deletePost(int id);
 
 
     ResponseEntity<?> fetchPostById(int id);
@@ -18,5 +17,5 @@ public interface PostService {
 
     ResponseEntity<?> getAllFriendsPost();
 
-    ResponseEntity<?> likePost(LikeDto likeDto);
+    ResponseEntity<?> likePost(int postId);
 }

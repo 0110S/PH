@@ -137,7 +137,7 @@ public class UserServiceImp implements UserService {
                 throw new Exception("");
             }
 
-            long posts = postRepository.count();
+            List<Post> posts = postRepository.findAllPostsByUser(user);
             ProfileResponse userData = new ProfileResponse();
             userData.setFirstName(user.getFirstName());
             userData.setLastName(user.getLastName());
@@ -147,7 +147,7 @@ public class UserServiceImp implements UserService {
             userData.setProfilePic(user.getProfilePic());
             userData.setFollowerCount(user.getFollower());
             userData.setFollowingCount(user.getFollowing());
-            userData.setPostCOUNT(posts);
+            userData.setPostCOUNT(posts.stream().count());
 
             return ResponseEntity.ok(userData);
         } catch (Exception e) {
@@ -166,6 +166,7 @@ public class UserServiceImp implements UserService {
             List<User> users = userRepository.findAll();
             List<FriendRequest> friends = friendRequestRepository.findByUser(existingUser.get());
 
+            System.out.println(" friends "+friends);
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
@@ -179,6 +180,8 @@ public class UserServiceImp implements UserService {
                     nonFriends.add(user);
                 }
             }
+            System.out.println(""+nonFriends);
+
             List<ObjectNode> not = nonFriends
                     .stream()
                     .map(user -> {
@@ -192,8 +195,9 @@ public class UserServiceImp implements UserService {
                         userNode.put("following", user.isFollow());
                         return userNode;
                     }).collect(Collectors.toList());
+//
 
-
+            System.out.println(nonFriends);
             LoginResponse userDtoResponse = new LoginResponse();
             return ResponseEntity.ok(new MessageResponse("not friends ", not));
         } catch (InvalidUserException exception) {

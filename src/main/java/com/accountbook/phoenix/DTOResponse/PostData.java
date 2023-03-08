@@ -12,9 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PostData {
-
-    private LocalDateTime localDateTime;
     private String post;
+    private LocalDateTime localDateTime;
     private String firstname;
     private String lastName;
     private String userName;
@@ -22,5 +21,5 @@ public class PostData {
     private String mobileNumber;
     private boolean like;
     private int likeCount;
-    private List<ObjectNode>  comments;
+    private long  comments;
 }

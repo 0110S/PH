@@ -2,7 +2,6 @@ package com.accountbook.phoenix.Controller;
 
 import com.accountbook.phoenix.DTO.PostRequest;
 import com.accountbook.phoenix.DTOResponse.LikeDto;
-import com.accountbook.phoenix.DTOResponse.PResponse;
 import com.accountbook.phoenix.DTOResponse.PostResponse;
 import com.accountbook.phoenix.Service.PostService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,25 +24,27 @@ public class PostController {
     }
 
     @DeleteMapping("/post/delete")
-    ResponseEntity<PostResponse> deletePost(@RequestParam("postId") int id) {
+    ResponseEntity<?> deletePost(@RequestParam("postId") int id) {
         return postService.deletePost(id);
     }
 
     @GetMapping("/getPost")
-    ResponseEntity<?> getPost(@RequestParam ("postId") int id){
+    ResponseEntity<?> getPost(@RequestParam("postId") int id) {
         return postService.fetchPostById(id);
     }
 
     @PutMapping("toggleLike")
-    ResponseEntity<?> toggleSwitch(LikeDto likeDto){
-        return postService.likePost(likeDto);
+    ResponseEntity<?> toggleSwitch(@RequestParam("postId") int postId) {
+        return postService.likePost(postId);
     }
+
     @GetMapping("/allPosts")
     ResponseEntity<String> getAllPosts() throws JsonProcessingException {
         return postService.getAllPosts();
     }
+
     @GetMapping("/getAllFriendsPost")
-    ResponseEntity<?> getAllFriendsPost(){
+    ResponseEntity<?> getAllFriendsPost() {
         return postService.getAllFriendsPost();
     }
 }
