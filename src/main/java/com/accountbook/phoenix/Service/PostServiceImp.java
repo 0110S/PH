@@ -369,13 +369,7 @@ public class PostServiceImp implements PostService {
                 ObjectNode userNode = new ObjectMapper().createObjectNode();
                 userNode.put("post", post.getPost());
                 userNode.put("postId", post.getId());
-                userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
-                userNode.put("firstName", post.getUser().getFirstName());
-                userNode.put("lastName", post.getUser().getLastName());
-                userNode.put("email", post.getUser().getEmail());
-                userNode.put("userName", post.getUser().getUsername());
-                userNode.put("mobileNumber", post.getUser().getMobileNumber());
-                userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
+                userNode.put("createdTime", String.valueOf(post.getLocalDateTime()));
                 userNode.put("like", post.isLike());
                 userNode.put("likeCount", post.getLikeCount());
                 int commentCount = 0;
@@ -418,11 +412,11 @@ public class PostServiceImp implements PostService {
             if (!existingUser.isPresent()) {
                 throw new InvalidUserException("user not found ");
             }
-            List<FriendRequest> friendships = friendRequestRepository.findByUser(existingUser.get());
+            List<FriendRequest> friendships = friendRequestRepository.findBySender(existingUser.get());
             List<User> friends = new ArrayList<>();
             for (FriendRequest friendship : friendships) {
                 if (friendship.isFollowing()) {
-                    friends.add(friendship.getFriend());
+                    friends.add(friendship.getReceiver());
                 }
             }
             List<Post> posts = new ArrayList<>();

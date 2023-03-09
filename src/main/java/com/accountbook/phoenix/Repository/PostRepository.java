@@ -22,7 +22,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     long count();
 
     Post findByUser(User user);
-    
+
     List<Post> findAllPostsByUser(User user);
 }
 

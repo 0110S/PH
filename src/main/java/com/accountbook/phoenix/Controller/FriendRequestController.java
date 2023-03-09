@@ -1,8 +1,6 @@
 package com.accountbook.phoenix.Controller;
 
-import com.accountbook.phoenix.DTO.FriendRequestDto;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
-import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Service.FriendRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +14,8 @@ public class FriendRequestController {
     private final FriendRequestService friendRequestService;
 
     @PostMapping("/addFriend")
-    public ResponseEntity<?> addFriend(@RequestBody FriendRequestDto friendRequestDto) {
-        return friendRequestService.addFriend(friendRequestDto);
+    public ResponseEntity<?> addFriend(@RequestParam("receiverId") int receiverId) {
+        return friendRequestService.followUser(receiverId);
     }
 
     @GetMapping("/friends")
@@ -25,8 +23,5 @@ public class FriendRequestController {
         return friendRequestService.listOfFriends();
     }
 
-    @DeleteMapping("/unfriend")
-    public ResponseEntity<MessageResponse> unfriend(@RequestBody FriendRequestDto friendRequestDto){
-        return friendRequestService.unfriend(friendRequestDto);
-    }
+
 }

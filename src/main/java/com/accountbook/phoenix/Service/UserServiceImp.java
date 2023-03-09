@@ -164,14 +164,14 @@ public class UserServiceImp implements UserService {
             }
 
             List<User> users = userRepository.findAll();
-            List<FriendRequest> friends = friendRequestRepository.findByUser(existingUser.get());
+            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
 
             System.out.println(" friends "+friends);
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
                 for (FriendRequest friend : friends) {
-                    if (friend.getFriend().getId() == user.getId()) {
+                    if (friend.getReceiver().getId() == user.getId()) {
                         isFriend = true;
                         break;
                     }
@@ -215,11 +215,11 @@ public class UserServiceImp implements UserService {
             }
 
             List<User> users = userRepository.findAll();
-            List<FriendRequest> friends = friendRequestRepository.findByUser(existingUser.get());
+            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
 
 
             List<User> friendUsers = friends.stream()
-                    .flatMap(fr -> Stream.of(fr.getUser(), fr.getFriend()))
+                    .flatMap(fr -> Stream.of(fr.getSender(), fr.getReceiver()))
                     .distinct()
                     .collect(Collectors.toList());
 
