@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,7 +144,6 @@ public class PostServiceImp implements PostService {
             if (user.getId() == 0) {
                 throw new InvalidUserException("User not found");
             }
-
 
             List<Comment> comment = commentRepository.findAllByRefId(postId);
             List<ObjectNode> allComments = comment.stream()
@@ -338,23 +338,23 @@ public class PostServiceImp implements PostService {
                 posts.addAll(friendPosts);
             }
 
-            List<ObjectNode> userData = posts.stream().map(post -> {
-                ObjectNode userNode = new ObjectMapper().createObjectNode();
-                userNode.put("firstName", post.getUser().getFirstName());
-                userNode.put("lastName", post.getUser().getEmail());
-
+            List<ObjectNode> postData = posts.stream().map(post -> {
                 ObjectNode postNode = new ObjectMapper().createObjectNode();
                 postNode.put("post", post.getPost());
                 postNode.put("like", post.isLike());
                 postNode.put("lieCount", post.getLikeCount());
                 postNode.put("time", String.valueOf(post.getLocalDateTime()));
-
-                ObjectNode resultNode = new ObjectMapper().createObjectNode();
-                resultNode.set("userResponse", userNode);
-                resultNode.set("postResponse", postNode);
-                return resultNode;
+                return postNode;
             }).collect(Collectors.toList());
-            return ResponseEntity.ok(new MessageResponse("successful",userData));
+
+            List<ObjectNode> userData = posts.stream().map(post -> {
+                ObjectNode userNode = new ObjectMapper().createObjectNode();
+                userNode.put("firstName", post.getUser().getFirstName());
+                userNode.put("lastName", post.getUser().getEmail());
+                userNode.put("post", (BigDecimal) postData);
+                return userNode;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(new MessageResponse("successful", userData));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();
         }
