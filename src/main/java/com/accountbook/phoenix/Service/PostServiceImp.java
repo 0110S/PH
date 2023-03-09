@@ -38,7 +38,6 @@ public class PostServiceImp implements PostService {
 
     private final CommentRepository commentRepository;
 
-    //    private final ReactionsRepository reactionsRepository;
     private final Utils utils;
 
     private final UserRepository userRepository;
@@ -130,80 +129,6 @@ public class PostServiceImp implements PostService {
         }
     }
 
-    //    public ResponseEntity<NotificationResponse> likePost(int postId) {
-//        try {
-//            log.info("int the method");
-//            Optional<Post> post = postRepository.findById(postId);
-//            if (post.isEmpty()) {
-//                throw new PostNotFoundException("post not found");
-//            }
-//
-//            if (post.get().isLike()) {
-//                throw new PostAlreadyLikedException(" post already liked");
-//            }
-//
-//            User user = utils.getUser();
-//            if (user.getId() == 0) {
-//                throw new InvalidUserException("user not found");
-//            }
-//            NotificationResponse notificationResponse = new NotificationResponse();
-//            PostData userData = new PostData();
-//            userData.setPost(post.get().getPost());
-//            userData.setFirstname(post.get().getUser().getFirstName());
-//            userData.setLastName(post.get().getUser().getLastName());
-//            userData.setMobileNumber(post.get().getUser().getMobileNumber());
-//            userData.setEmail(post.get().getUser().getEmail());
-//            userData.setUserName(post.get().getUser().getUsername());
-//            List<Comment> comment = commentRepository.findAllByRefId(postId);
-//
-//            List<ObjectNode> allComments = comment.stream()
-//                    .filter(comment1 -> comment1.getRefType().equals("post"))
-//                    .map(comments -> {
-//                        ObjectNode userNode = new ObjectMapper().createObjectNode();
-//                        userNode.put("comments", comments.getComment());
-//                        return userNode;
-//                    }).collect(Collectors.toList());
-//            userData.setLikeCount(post.get().getLikeCount());
-//            userData.setComments(allComments);
-//            notificationResponse.setPost(userData);
-//
-//            if (likeDto.isLike()) {
-//                log.info("Liking post...");
-//                post.get().setLike(true);
-//                post.get().setLikeCount(post.get().getLikeCount() + 1);
-//                post.get().setReactedUser(user);
-//                postRepository.save(post.get());
-//
-//                // Build response data
-//                userData.setLike(post.get().isLike());
-//                userData.setLikeCount(post.get().getLikeCount());
-//
-//
-//                // Return response
-//                notificationResponse.setMessage("Post liked.");
-//            } else {
-//                log.info("Disliking post...");
-//                post.get().setLike(false);
-//                post.get().setLikeCount(Math.max(0, post.get().getLikeCount() - 1));
-//                post.get().setReactedUser(null);
-//                postRepository.save(post.get());
-//
-//                // Build response data
-//                userData.setLike(post.get().isLike());
-//                userData.setLikeCount(post.get().getLikeCount());
-//
-//                // Return response
-//                notificationResponse.setMessage("Post unliked.");
-//            }
-//            notificationResponse.setPost(userData);
-//            return ResponseEntity.ok(notificationResponse);
-//        } catch (PostNotFoundException | InvalidUserException e) {
-//            return null;
-//        } catch (PostAlreadyLikedException exception) {
-//            return null;
-//        }
-//
-//    }
     public ResponseEntity<?> likePost(int postId) {
         try {
             log.info("In the method");
@@ -261,7 +186,7 @@ public class PostServiceImp implements PostService {
                 return ResponseEntity.ok(allPosts);
             }
 
-            // If post is not liked and the user wants to like it, make it like
+            // If post is not liked like it
             if (!isAlreadyLiked && isLiking) {
                 log.info("Liking post...");
                 existingPost.get().setLike(true);
@@ -269,7 +194,7 @@ public class PostServiceImp implements PostService {
                 existingPost.get().setReactedUserId(user.getId());
                 postRepository.save(existingPost.get());
                 List<Post> posts = postRepository.findAllPostsByUser(existingPost.get().getUser());
-                log.info("posts bigilu "+posts);
+                log.info("posts bigilu " + posts);
                 List<ObjectNode> allPosts = posts.stream().map(post -> {
                     ObjectNode userNode = new ObjectMapper().createObjectNode();
                     userNode.put("message", "posts ");
@@ -379,17 +304,7 @@ public class PostServiceImp implements PostService {
                 userNode.put("commentCount", commentCount);
                 return userNode;
             }).collect(Collectors.toList());
-//            List<Comment> comment = commentRepository.findAllByRefId();
-//
             p.setUserData(userData);
-//            List<ObjectNode> allComments = comment.stream()
-//                    .filter(comment1 -> comment1.getRefType().equals("post"))
-//                    .map(comments -> {
-//                        ObjectNode userNode = new ObjectMapper().createObjectNode();
-//                        userNode.put("comments", comments.getComment());
-//                        return userNode;
-//                    }).collect(Collectors.toList());
-//
             p.setMessage("posts  ");
             ObjectMapper mapper = new ObjectMapper();
             String postData = mapper.writeValueAsString(p);
@@ -413,19 +328,33 @@ public class PostServiceImp implements PostService {
                 throw new InvalidUserException("user not found ");
             }
             List<FriendRequest> friendships = friendRequestRepository.findBySender(existingUser.get());
-            List<User> friends = new ArrayList<>();
-            for (FriendRequest friendship : friendships) {
-                if (friendship.isFollowing()) {
-                    friends.add(friendship.getReceiver());
-                }
-            }
+            List<User> friends = friendships.stream()
+                    .filter(friendship -> friendship.isFollowing())
+                    .map(friendship -> friendship.getReceiver())
+                    .collect(Collectors.toList());
             List<Post> posts = new ArrayList<>();
             for (User friend : friends) {
                 List<Post> friendPosts = postRepository.findAllPostsByUser(friend);
                 posts.addAll(friendPosts);
             }
 
-            return ResponseEntity.ok(new MessageResponse("successful", posts));
+            List<ObjectNode> userData = posts.stream().map(post -> {
+                ObjectNode userNode = new ObjectMapper().createObjectNode();
+                userNode.put("firstName", post.getUser().getFirstName());
+                userNode.put("lastName", post.getUser().getEmail());
+
+                ObjectNode postNode = new ObjectMapper().createObjectNode();
+                postNode.put("post", post.getPost());
+                postNode.put("like", post.isLike());
+                postNode.put("lieCount", post.getLikeCount());
+                postNode.put("time", String.valueOf(post.getLocalDateTime()));
+
+                ObjectNode resultNode = new ObjectMapper().createObjectNode();
+                resultNode.set("userResponse", userNode);
+                resultNode.set("postResponse", postNode);
+                return resultNode;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(new MessageResponse("successful",userData));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();
         }

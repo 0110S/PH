@@ -53,12 +53,14 @@ public class FriendRequestService {
                 friendRequest.setReceiver(receiver.get());
                 friendRequest.setFollowing(true);
 
-            } else if (friendRequest != null) {
+            } else if (friendRequest != null && friendRequest.isFollowing()) {
                 friendRequest.setFollowing(false);
-                friendRequestRepository.delete(friendRequest);
+                friendRequestRepository.save(friendRequest);
                 return ResponseEntity.ok("{\n" +
                         "   \"message\": \"Unfollowed user successfully\"\n" +
                         "}");
+            } else {
+                friendRequest.setFollowing(true);
             }
 
             friendRequestRepository.save(friendRequest);
@@ -69,7 +71,59 @@ public class FriendRequestService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(exception.getMessage());
         }
     }
-    
+
+//            boolean isFollowing = existingFriendRequest.isPresent() && existingFriendRequest.get().isFollowing();
+//            boolean isUnfollowing = existingFriendRequest.isPresent() && !existingFriendRequest.get().isFollowing();
+//
+//            if (friendRequestDto.isFollow() && isFollowing) {
+//                throw new DuplicateFollowException("already following");
+//            } else if (!friendRequestDto.isFollow() && isUnfollowing) {
+//                throw new InvalidUserException("already unfollowing");
+//            }
+
+//            UserResponse userResponse = new UserResponse();
+//            UserData userData = new UserData();
+//            userData.setUserName(user.get().getUsername());
+//            userData.setFirstName(user.get().getFirstName());
+//            userData.setLastName(user.get().getLastName());
+//            userData.setEmail(user.get().getEmail());
+//            userData.setMobileNumber(user.get().getMobileNumber());
+//
+//            if (friendRequestDto.isFollow()) {
+//                user.get().setFollowing(+1);
+//                userData.setFollow(true);
+//                userResponse.setMessage("following");
+//            } else {
+//                user.get().setFollowing(-1);
+//                userData.setFollow(false);
+//                userResponse.setMessage("unfollowed");
+//            }
+//
+//            userRepository.save(user.get());
+//
+//            if (existingFriendRequest.isPresent()) {
+//                existingFriendRequest.get().setFollowing(friendRequestDto.isFollow());
+//            } else {
+//                FriendRequest friendRequest = new FriendRequest();
+//                friendRequest.setFollowing(friendRequestDto.isFollow());
+//                friendRequest.setFriend(user.get());
+//                friendRequest.setUser(utils.getUser());
+//                friendRequestRepository.save(friendRequest);
+//            }
+//
+//            userResponse.setResponse(userData);
+//            return ResponseEntity.ok(userResponse);
+//        } catch (InvalidUserException exception) {
+//            UserResponse userResponse = new UserResponse();
+//            userResponse.setMessage(exception.getMessage());
+//            return ResponseEntity.badRequest().body(userResponse);
+//        } catch (DuplicateFollowException exception) {
+//            UserResponse userResponse = new UserResponse();
+//            userResponse.setMessage(exception.getMessage());
+//            return ResponseEntity.badRequest().body(userResponse);
+//        }
+//    }
+
 
     public ResponseEntity<MessageResponse> listOfFriends() {
         try {
