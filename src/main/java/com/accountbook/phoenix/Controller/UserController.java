@@ -35,7 +35,7 @@ public class UserController {
 
     @GetMapping("allUsers")
     public ResponseEntity<MessageResponse> fetchAllUsers() {
-        return userService.fetchAllUsers();
+        return userService.fetchAllNonFriends();
     }
 
     @PostMapping("profilePic")

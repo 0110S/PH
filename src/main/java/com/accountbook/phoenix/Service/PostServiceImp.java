@@ -326,47 +326,32 @@ public class PostServiceImp implements PostService {
                 posts.addAll(friendPosts);
             }
 
-            List<ObjectNode> postData = posts.stream().map(post -> {
-                ObjectNode postNode = new ObjectMapper().createObjectNode();
-                postNode.put("post", post.getPost());
-                postNode.put("like", post.isLike());
-                postNode.put("lieCount", post.getLikeCount());
-                postNode.put("time", String.valueOf(post.getLocalDateTime()));
-                int commentCount = 0;
-                if (post.getComment() != null) {
-                    commentCount = post.getComment().getCommentCount();
-                }
-                postNode.put("commentCount", commentCount);
-                return postNode;
-            }).collect(Collectors.toList());
+            List<UserResponseDto> userResponse = posts.stream()
+                    .map(post -> {
+                        List<PostResponseDto> postResponse = new ArrayList<>();
+                        PostResponseDto postResponseDto = new PostResponseDto();
+                        postResponseDto.setPostId(post.getId());
+                        postResponseDto.setPost(post.getPost());
+                        postResponseDto.setTime(post.getLocalDateTime());
+                        postResponseDto.setLikeCount(post.getLikeCount());
+                        postResponseDto.setLike(post.isLike());
+                        int commentCount = 0;
+                        if (post.getComment() != null) {
+                            commentCount = post.getComment().getCommentCount();
+                        }
+                        postResponseDto.setCommentCount(commentCount);
+                        postResponse.add(postResponseDto);
+                        UserResponseDto userResponseDto = new UserResponseDto();
+                        userResponseDto.setUserId(post.getUser().getId());
+                        userResponseDto.setFirstName(post.getUser().getFirstName());
+                        userResponseDto.setProfilePic(post.getUser().getProfilePic());
+                        userResponseDto.setLastName(post.getUser().getLastName());
+                        userResponseDto.setPosts(postResponse);
+                        return userResponseDto;
+                    })
+                    .collect(Collectors.toList());
 
-            List<ObjectNode> userData = posts.stream().map(post -> {
-                ObjectNode userNode = new ObjectMapper().createObjectNode();
-                userNode.put("firstName", post.getUser().getFirstName());
-                userNode.put("lastName", post.getUser().getLastName());
-                userNode.put("post", postData.toString());
-                return userNode;
-            }).collect(Collectors.toList());
-
-//            List<UserResponseDto> userResponse = posts.stream()
-//                    .map(post -> {
-//                        List<PostResponseDto> postResponse = new ArrayList<>();
-//                        postResponse.add(new PostResponseDto(
-//                                post.getPost(),
-//                                post.isLike(),
-//                                post.getLikeCount(),
-//                                String.valueOf(post.getLocalDateTime())
-//                        ));
-//                        return new UserResponseDto(
-//                                post.getUser().getFirstName(),
-//                                post.getUser().getEmail(),
-//                                postResponse
-//                        );
-//                    })
-//                    .collect(Collectors.toList());
-
-
-            return ResponseEntity.ok(new MessageResponse("successful", userData));
+            return ResponseEntity.ok(new MessageResponse("successful", userResponse));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();
         }

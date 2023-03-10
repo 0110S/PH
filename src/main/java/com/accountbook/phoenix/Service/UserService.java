@@ -12,7 +12,7 @@ public interface UserService {
 
     ResponseEntity<LoginResponse> userLogin(LoginRequest loginRequest);
 
-    ResponseEntity<MessageResponse> fetchAllUsers();
+    ResponseEntity<MessageResponse> fetchAllNonFriends();
 
     ResponseEntity<UserResponse> setProfilePic(MultipartFile file);
 

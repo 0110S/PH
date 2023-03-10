@@ -1,7 +1,6 @@
 package com.accountbook.phoenix.Controller;
 
 import com.accountbook.phoenix.DTO.PostRequest;
-import com.accountbook.phoenix.DTOResponse.LikeDto;
 import com.accountbook.phoenix.DTOResponse.PostResponse;
 import com.accountbook.phoenix.Service.PostService;
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -5,10 +5,7 @@ import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTO.LoginRequest;
 import com.accountbook.phoenix.DTO.UserData;
 import com.accountbook.phoenix.DTO.UserRequest;
-import com.accountbook.phoenix.DTOResponse.LoginResponse;
-import com.accountbook.phoenix.DTOResponse.MessageResponse;
-import com.accountbook.phoenix.DTOResponse.ProfileResponse;
-import com.accountbook.phoenix.DTOResponse.UserResponse;
+import com.accountbook.phoenix.DTOResponse.*;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
@@ -17,8 +14,6 @@ import com.accountbook.phoenix.Exception.UserFoundException;
 import com.accountbook.phoenix.Repository.FriendRequestRepository;
 import com.accountbook.phoenix.Repository.PostRepository;
 import com.accountbook.phoenix.Repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -156,7 +151,7 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public ResponseEntity<MessageResponse> fetchAllUsers() {
+    public ResponseEntity<MessageResponse> fetchAllNonFriends() {
         try {
             Optional<User> existingUser = userRepository.findById(utils.getUser().getId());
             if (existingUser.isEmpty()) {
@@ -166,7 +161,7 @@ public class UserServiceImp implements UserService {
             List<User> users = userRepository.findAll();
             List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
 
-            System.out.println(" friends "+friends);
+            System.out.println(" friends " + friends);
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
@@ -180,83 +175,73 @@ public class UserServiceImp implements UserService {
                     nonFriends.add(user);
                 }
             }
-            System.out.println(""+nonFriends);
+            List<NonFriendsResponseDto> nonFriendsResponseDtos =
+                    nonFriends.stream()
+                            .map(user -> new NonFriendsResponseDto(
+                                    user.getId(),
+                                    user.getFirstName(),
+                                    user.getLastName(),
+                                    user.getProfilePic(),
+                                    user.isFollow()
+                            )).collect(Collectors.toList());
+            return ResponseEntity.ok(new MessageResponse("Successfully", nonFriendsResponseDtos));
+        } catch (InvalidUserException exception) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
-            List<ObjectNode> not = nonFriends
-                    .stream()
-                    .map(user -> {
-                        ObjectNode userNode = new ObjectMapper().createObjectNode();
-                        userNode.put("userId", user.getId());
-                        userNode.put("firstName", user.getFirstName());
-                        userNode.put("lastName", user.getLastName());
-                        userNode.put("userName", user.getUsername());
-                        userNode.put("email", user.getEmail());
-                        userNode.put("profilePic", String.valueOf(user.getProfilePic()));
-                        userNode.put("following", user.isFollow());
-                        return userNode;
-                    }).collect(Collectors.toList());
+
+//    public ResponseEntity<?> fetchAllUsersPosts() {
+//        try {
+//            Optional<User> existingUser = userRepository.findById(utils.getUser().getId());
+//            if (existingUser.isEmpty()) {
+//                throw new InvalidUserException("user not found");
+//            }
 //
-
-            System.out.println(nonFriends);
-            LoginResponse userDtoResponse = new LoginResponse();
-            return ResponseEntity.ok(new MessageResponse("not friends ", not));
-        } catch (InvalidUserException exception) {
-
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-
-    public ResponseEntity<?> fetchAllUsersPosts() {
-        try {
-            Optional<User> existingUser = userRepository.findById(utils.getUser().getId());
-            if (existingUser.isEmpty()) {
-                throw new InvalidUserException("user not found");
-            }
-
-            List<User> users = userRepository.findAll();
-            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
-
-
-            List<User> friendUsers = friends.stream()
-                    .flatMap(fr -> Stream.of(fr.getSender(), fr.getReceiver()))
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            List<Post> friendPosts = friendUsers.stream()
-                    .map(u -> postRepository.findByUser(u))
-                    .collect(Collectors.toList());
-
-            friendPosts.stream()
-                    .map(post -> {
-                        ObjectNode userNode = new ObjectMapper().createObjectNode();
-                        userNode.put("postId", post.getId());
-                        userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
-                        userNode.put("firstName", post.getUser().getFirstName());
-                        userNode.put("lastName", post.getUser().getLastName());
-                        userNode.put("email", post.getUser().getEmail());
-                        userNode.put("userName", post.getUser().getUsername());
-                        userNode.put("mobileNumber", post.getUser().getMobileNumber());
-                        userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
-                        userNode.put("like", post.isLike());
-                        userNode.put("likeCount", post.getLikeCount());
-                        int commentCount = 0;
-                        if (post.getComment() != null) {
-                            commentCount = post.getComment().getCommentCount();
-                        }
-                        userNode.put("commentCount", commentCount);
-                        return userNode;
-                    }).collect(Collectors.toList());
-
-
-            LoginResponse userDtoResponse = new LoginResponse();
-            userDtoResponse.setMessage("Login Successfully ");
-            return ResponseEntity.ok(new MessageResponse("post found", friendPosts));
-        } catch (InvalidUserException exception) {
-
-            return ResponseEntity.notFound().build();
-        }
-    }
+//            List<User> users = userRepository.findAll();
+//            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
+//
+//
+//            List<User> friendUsers = friends.stream()
+//                    .flatMap(fr -> Stream.of(fr.getSender(), fr.getReceiver()))
+//                    .distinct()
+//                    .collect(Collectors.toList());
+//
+//            List<Post> friendPosts = friendUsers.stream()
+//                    .map(u -> postRepository.findByUser(u))
+//                    .collect(Collectors.toList());
+//
+//            List<UserResponseDto> userResponseDtos = friendPosts.stream()
+//                    .map(post -> {
+//                        List<PostResponseDto> postResponse = new ArrayList<>();
+//                        PostResponseDto postResponseDto = new PostResponseDto();
+//                        postResponseDto.setPostId(post.getId());
+//                        postResponseDto.setPost(post.getPost());
+//                        postResponseDto.setTime(post.getLocalDateTime());
+//                        postResponseDto.setLikeCount(post.getLikeCount());
+//                        postResponseDto.setLike(post.isLike());
+//                        int commentCount = 0;
+//                        if (post.getComment() != null) {
+//                            commentCount = post.getComment().getCommentCount();
+//                        }
+//                        postResponseDto.setCommentCount(commentCount);
+//                        postResponse.add(postResponseDto);
+//                        UserResponseDto userResponseDto = new UserResponseDto();
+//                        userResponseDto.setUserId(post.getUser().getId());
+//                        userResponseDto.setFirstName(post.getUser().getFirstName());
+//                        userResponseDto.setProfilePic(post.getUser().getProfilePic());
+//                        userResponseDto.setLastName(post.getUser().getLastName());
+//                        userResponseDto.setPosts(postResponse);
+//                        return userResponseDto;
+//                    })
+//                    .collect(Collectors.toList());
+//
+//            return ResponseEntity.ok(new MessageResponse("Successful", userResponseDtos));
+//        } catch (InvalidUserException exception) {
+//
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 
     @Override
     public ResponseEntity<UserResponse> setProfilePic(MultipartFile file) {
