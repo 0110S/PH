@@ -23,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,9 +110,6 @@ public class PostServiceImp implements PostService {
                 userNode.put("postId", post.getId());
                 userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                 userNode.put("post", post.getPost());
-                userNode.put("firstName", post.getUser().getFirstName());
-                userNode.put("lastName", post.getUser().getLastName());
-                userNode.put("userName", post.getUser().getUsername());
                 userNode.put("email", post.getUser().getEmail());
                 userNode.put("like", post.isLike());
                 userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
@@ -172,13 +168,9 @@ public class PostServiceImp implements PostService {
                     userNode.put("postId", post.getId());
                     userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                     userNode.put("post", post.getPost());
-                    userNode.put("firstName", post.getUser().getFirstName());
-                    userNode.put("lastName", post.getUser().getLastName());
-                    userNode.put("userName", post.getUser().getUsername());
                     userNode.put("email", post.getUser().getEmail());
                     userNode.put("like", post.isLike());
                     userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
-                    userNode.put("mobileNumber", post.getUser().getMobileNumber());
                     userNode.put("likeCount", post.getLikeCount());
                     userNode.put("commentCount", allComments.stream().count());
                     return userNode;
@@ -201,13 +193,9 @@ public class PostServiceImp implements PostService {
                     userNode.put("postId", post.getId());
                     userNode.put("localDate", String.valueOf(post.getLocalDateTime()));
                     userNode.put("post", post.getPost());
-                    userNode.put("firstName", post.getUser().getFirstName());
-                    userNode.put("lastName", post.getUser().getLastName());
-                    userNode.put("userName", post.getUser().getUsername());
                     userNode.put("email", post.getUser().getEmail());
                     userNode.put("profilePic", String.valueOf(post.getUser().getProfilePic()));
                     userNode.put("like", post.isLike());
-                    userNode.put("mobileNumber", post.getUser().getMobileNumber());
                     userNode.put("likeCount", post.getLikeCount());
                     userNode.put("commentCount", allComments.stream().count());
                     return userNode;
@@ -344,16 +332,40 @@ public class PostServiceImp implements PostService {
                 postNode.put("like", post.isLike());
                 postNode.put("lieCount", post.getLikeCount());
                 postNode.put("time", String.valueOf(post.getLocalDateTime()));
+                int commentCount = 0;
+                if (post.getComment() != null) {
+                    commentCount = post.getComment().getCommentCount();
+                }
+                postNode.put("commentCount", commentCount);
                 return postNode;
             }).collect(Collectors.toList());
 
             List<ObjectNode> userData = posts.stream().map(post -> {
                 ObjectNode userNode = new ObjectMapper().createObjectNode();
                 userNode.put("firstName", post.getUser().getFirstName());
-                userNode.put("lastName", post.getUser().getEmail());
-                userNode.put("post", (BigDecimal) postData);
+                userNode.put("lastName", post.getUser().getLastName());
+                userNode.put("post", postData.toString());
                 return userNode;
             }).collect(Collectors.toList());
+
+//            List<UserResponseDto> userResponse = posts.stream()
+//                    .map(post -> {
+//                        List<PostResponseDto> postResponse = new ArrayList<>();
+//                        postResponse.add(new PostResponseDto(
+//                                post.getPost(),
+//                                post.isLike(),
+//                                post.getLikeCount(),
+//                                String.valueOf(post.getLocalDateTime())
+//                        ));
+//                        return new UserResponseDto(
+//                                post.getUser().getFirstName(),
+//                                post.getUser().getEmail(),
+//                                postResponse
+//                        );
+//                    })
+//                    .collect(Collectors.toList());
+
+
             return ResponseEntity.ok(new MessageResponse("successful", userData));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();
