@@ -1,21 +1,21 @@
 package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.DTO.PostRequest;
-import com.accountbook.phoenix.DTOResponse.PostResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 
 public interface PostService {
-    ResponseEntity<PostResponse> postSomething(PostRequest postRequest);
+    ResponseEntity<MessageResponse> postSomething(PostRequest postRequest);
 
-    ResponseEntity<?> deletePost(int id);
+    ResponseEntity<MessageResponse> deletePost(int id);
 
 
-    ResponseEntity<?> fetchPostById(int id);
+    ResponseEntity<MessageResponse> fetchPostById(int id);
 
-    ResponseEntity<String> getAllPosts() throws JsonProcessingException;
+    ResponseEntity<MessageResponse> getAllPosts() throws JsonProcessingException;
 
-    ResponseEntity<?> getAllFriendsPost();
+    ResponseEntity<MessageResponse> getAllFriendsPost();
 
-    ResponseEntity<?> likePost(int postId);
+    ResponseEntity<MessageResponse> likePost(int postId);
 }

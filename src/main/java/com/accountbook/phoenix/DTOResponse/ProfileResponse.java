@@ -15,9 +15,8 @@ public class ProfileResponse {
     private String firstName;
     private String lastName;
     private String userName;
-    private String mobileNumber;
     private String email;
-    private File profilePic;
+    private String profilePic;
     private int followerCount;
     private int followingCount;
     private long postCOUNT;

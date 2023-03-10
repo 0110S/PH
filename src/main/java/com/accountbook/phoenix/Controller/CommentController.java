@@ -20,10 +20,10 @@ public class CommentController {
         return commentService.addCommentToPost(commentRequest);
     }
 
-    @PostMapping("/comment")
-    public ResponseEntity<MessageResponse> addCommentToComment(@RequestBody CommentRequest commentRequest) {
-        return commentService.addCommentToComment(commentRequest);
-    }
+//    @PostMapping("/comment")
+//    public ResponseEntity<MessageResponse> addCommentToComment(@RequestBody CommentRequest commentRequest) {
+//        return commentService.addCommentToComment(commentRequest);
+//    }
 
     @DeleteMapping("/delete")
     public ResponseEntity<MessageResponse> deleteComment(@RequestParam ("postId") int postId,@RequestParam ("commentId") int commentId){

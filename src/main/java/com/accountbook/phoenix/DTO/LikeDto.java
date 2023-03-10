@@ -1,4 +1,4 @@
-package com.accountbook.phoenix.DTOResponse;
+package com.accountbook.phoenix.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

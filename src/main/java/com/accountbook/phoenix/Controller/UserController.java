@@ -19,7 +19,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("signUp")
-    public ResponseEntity<UserResponse> userRegistration(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<MessageResponse> userRegistration(@RequestBody UserRequest userRequest) {
         return userService.userRegistration(userRequest);
     }
 
@@ -39,7 +39,7 @@ public class UserController {
     }
 
     @PostMapping("profilePic")
-    public ResponseEntity<UserResponse> setProfilePic(@RequestParam MultipartFile file) {
+    public ResponseEntity<MessageResponse> setProfilePic(@RequestParam MultipartFile file) {
         return userService.setProfilePic(file);
     }
 

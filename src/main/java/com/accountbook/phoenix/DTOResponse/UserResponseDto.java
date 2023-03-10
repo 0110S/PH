@@ -15,6 +15,6 @@ public class UserResponseDto {
     private int userId;
     private String firstName;
     private String lastName;
-    private File profilePic;
-    private List<PostResponseDto> posts;
+    private String profilePic;
+    private PostResponseDto post;
 }

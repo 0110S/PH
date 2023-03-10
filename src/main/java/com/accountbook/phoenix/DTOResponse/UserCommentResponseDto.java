@@ -4,17 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.File;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
+public class UserCommentResponseDto {
 
-    private int id;
+    private  int id;
     private String firstName;
     private String lastName;
-    private File profilePic;
-    private boolean following;
-    private  int followingCount;
+    private String profilePic;
+    private CommentResponse commentsList;
 }

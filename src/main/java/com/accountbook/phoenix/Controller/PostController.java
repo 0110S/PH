@@ -1,7 +1,7 @@
 package com.accountbook.phoenix.Controller;
 
 import com.accountbook.phoenix.DTO.PostRequest;
-import com.accountbook.phoenix.DTOResponse.PostResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.accountbook.phoenix.Service.PostService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
@@ -17,27 +17,27 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("post")
-    public ResponseEntity<PostResponse> postSomething(@RequestBody PostRequest postRequest) {
+    public ResponseEntity<MessageResponse> postSomething(@RequestBody PostRequest postRequest) {
         return postService.postSomething(postRequest);
     }
 
     @DeleteMapping("/post/delete")
-    ResponseEntity<?> deletePost(@RequestParam("postId") int id) {
+    ResponseEntity<MessageResponse> deletePost(@RequestParam("postId") int id) {
         return postService.deletePost(id);
     }
 
     @GetMapping("/getPost")
-    ResponseEntity<?> getPost(@RequestParam("postId") int id) {
+    ResponseEntity<MessageResponse> getPost(@RequestParam("postId") int id) {
         return postService.fetchPostById(id);
     }
 
     @PutMapping("toggleLike")
-    ResponseEntity<?> toggleSwitch(@RequestParam("postId") int postId) {
+    ResponseEntity<MessageResponse> toggleSwitch(@RequestParam("postId") int postId) {
         return postService.likePost(postId);
     }
 
     @GetMapping("/allPosts")
-    ResponseEntity<String> getAllPosts() throws JsonProcessingException {
+    ResponseEntity<MessageResponse> getAllPosts() throws JsonProcessingException {
         return postService.getAllPosts();
     }
 

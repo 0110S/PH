@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 public interface CommentService {
     ResponseEntity<MessageResponse> addCommentToPost(CommentRequest commentRequest);
 
-    ResponseEntity<MessageResponse> addCommentToComment(CommentRequest commentRequest);
+//    ResponseEntity<MessageResponse> addCommentToComment(CommentRequest commentRequest);
 
     ResponseEntity<MessageResponse> deleteComment(int postId, int commentId);
 

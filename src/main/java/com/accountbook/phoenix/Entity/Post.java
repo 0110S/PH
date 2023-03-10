@@ -22,7 +22,6 @@ public class Post {
     private boolean like = false;
     private boolean dislike = false;
     private int likeCount = 0;
-    private int dislikeCount = 0;
     private int postCount = 0;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)

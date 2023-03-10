@@ -8,11 +8,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Configuration
@@ -23,9 +27,25 @@ public class AuthenticationConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username).orElseThrow(() ->
-                new UsernameNotFoundException("user not found"));
+        return username -> {
+            try {
+                Optional<User> user = userRepository.findByEmail(username);
+                if (user == null) {
+                    throw new UsernameNotFoundException("User not found");
+                }
+                List<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority(user.get().getRole()));
+                return new org.springframework.security.core.userdetails.User(
+                        user.get().getEmail(),
+                        user.get().getPassword(),
+                        authorities
+                );
+            } catch (UsernameNotFoundException exception) {
+                throw exception;
+            }
+        };
     }
+
 
     @Bean
     PasswordEncoder passwordEncoder() {

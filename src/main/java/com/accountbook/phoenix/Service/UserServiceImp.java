@@ -5,10 +5,14 @@ import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTO.LoginRequest;
 import com.accountbook.phoenix.DTO.UserData;
 import com.accountbook.phoenix.DTO.UserRequest;
-import com.accountbook.phoenix.DTOResponse.*;
+import com.accountbook.phoenix.DTOResponse.LoginResponse;
+import com.accountbook.phoenix.DTOResponse.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.ProfileResponse;
+import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
+import com.accountbook.phoenix.Exception.FriendsNotFoundException;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.UserFoundException;
 import com.accountbook.phoenix.Repository.FriendRequestRepository;
@@ -31,7 +35,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -54,7 +57,7 @@ public class UserServiceImp implements UserService {
     AuthenticationManager authenticationManager;
 
     @Override
-    public ResponseEntity<UserResponse> userRegistration(UserRequest userRequest) {
+    public ResponseEntity<MessageResponse> userRegistration(UserRequest userRequest) {
         try {
             log.info("" + userRequest);
             Optional<User> user = userRepository.findByEmail(userRequest.getEmail());
@@ -77,16 +80,9 @@ public class UserServiceImp implements UserService {
             userData.setUserName(newUser.getUsername());
             userData.setEmail(newUser.getEmail());
             userData.setMobileNumber(newUser.getMobileNumber());
-
-            UserResponse userDtoResponse = new UserResponse();
-            userDtoResponse.setMessage("user signed successfully ");
-            userDtoResponse.setResponse(userData);
-
-            return ResponseEntity.ok(userDtoResponse);
+            return ResponseEntity.ok(new MessageResponse("user signed successfully", userData));
         } catch (UserFoundException exception) {
-            UserResponse userDtoResponse = new UserResponse();
-            userDtoResponse.setMessage("user already exists");
-            return ResponseEntity.badRequest().body(userDtoResponse);
+            return ResponseEntity.badRequest().body(new MessageResponse("error in user signIn", null));
         }
     }
 
@@ -138,8 +134,7 @@ public class UserServiceImp implements UserService {
             userData.setLastName(user.getLastName());
             userData.setUserName(user.getUsername());
             userData.setEmail(user.getEmail());
-            userData.setMobileNumber(user.getMobileNumber());
-            userData.setProfilePic(user.getProfilePic());
+            userData.setProfilePic(String.valueOf(user.getProfilePic()));
             userData.setFollowerCount(user.getFollower());
             userData.setFollowingCount(user.getFollowing());
             userData.setPostCOUNT(posts.stream().count());
@@ -160,8 +155,9 @@ public class UserServiceImp implements UserService {
 
             List<User> users = userRepository.findAll();
             List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
-
-            System.out.println(" friends " + friends);
+            if (friends.isEmpty()) {
+                throw new FriendsNotFoundException("no friends are available");
+            }
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
@@ -175,19 +171,63 @@ public class UserServiceImp implements UserService {
                     nonFriends.add(user);
                 }
             }
-            List<NonFriendsResponseDto> nonFriendsResponseDtos =
+            List<UserResponse> nonFriendsResponseDtos =
                     nonFriends.stream()
-                            .map(user -> new NonFriendsResponseDto(
+                            .map(user -> new UserResponse(
                                     user.getId(),
                                     user.getFirstName(),
                                     user.getLastName(),
                                     user.getProfilePic(),
-                                    user.isFollow()
+                                    user.isFollow(),
+                                    user.getFollowing()
                             )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("Successfully", nonFriendsResponseDtos));
         } catch (InvalidUserException exception) {
             return ResponseEntity.notFound().build();
+        } catch (FriendsNotFoundException exception) {
+            return ResponseEntity.badRequest().body(new MessageResponse(exception.getMessage(), null));
         }
+    }
+
+
+    @Override
+    public ResponseEntity<MessageResponse> setProfilePic(MultipartFile file) {
+        try {
+            log.info("in the method ");
+            Optional<User> user = userRepository.findById(utils.getUser().getId());
+            if (user.isEmpty()) {
+                log.warn("in the exception");
+                throw new InvalidUserException("user not found");
+            }
+            File saveFile = saveToFile(file);
+            log.info("got the file ");
+            user.get().setProfilePic(saveFile);
+            userRepository.save(user.get());
+            UserResponse userResponse = new UserResponse(
+                    user.get().getId(),
+                    user.get().getFirstName(),
+                    user.get().getLastName(),
+                    user.get().getProfilePic(),
+                    user.get().isFollow(),
+                    user.get().getFollowing()
+            );
+
+            return ResponseEntity.ok(new MessageResponse("profile pic updated successfully ", userResponse));
+        } catch (InvalidUserException | IOException exception) {
+
+            return ResponseEntity.badRequest().body(new MessageResponse("error", null));
+        }
+    }
+
+    private File saveToFile(MultipartFile file) throws IOException {
+        log.info("in the file ");
+        String fileName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+
+        File savedFile = new File("src/main/java/com/accountbook/phoenix/Files/", fileName);
+
+        file.transferTo(savedFile);
+
+        return savedFile;
     }
 
 
@@ -243,52 +283,5 @@ public class UserServiceImp implements UserService {
 //        }
 //    }
 
-    @Override
-    public ResponseEntity<UserResponse> setProfilePic(MultipartFile file) {
-        try {
-            log.info("in the method ");
-            Optional<User> user = userRepository.findById(utils.getUser().getId());
-            if (user.isEmpty()) {
-                log.warn("in the exception");
-                throw new InvalidUserException("user not found");
-            }
-            File saveFile = saveToFile(file);
-            log.info("got the file ");
-            user.get().setProfilePic(saveFile);
-            userRepository.save(user.get());
-            UserData userData = new UserData();
-            userData.setFirstName(user.get().getFirstName());
-            userData.setLastName(user.get().getLastName());
-            userData.setEmail(user.get().getEmail());
-            userData.setMobileNumber(user.get().getMobileNumber());
-            userData.setUserName(user.get().getUsername());
-            userData.setProfilePic(user.get().getProfilePic());
-
-            UserResponse response = new UserResponse();
-            response.setResponse(userData);
-            response.setMessage("Profile pic Updated Successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (InvalidUserException exception) {
-            UserResponse response = new UserResponse();
-            response.setMessage("user not found ");
-            return ResponseEntity.badRequest().body(response);
-        } catch (IOException e) {
-            UserResponse userResponse = new UserResponse();
-            userResponse.setMessage("no image to upload");
-            return ResponseEntity.badRequest().body(userResponse);
-        }
-    }
-
-    private File saveToFile(MultipartFile file) throws IOException {
-        log.info("in the file ");
-        String fileName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
-
-        File savedFile = new File("src/main/java/com/accountbook/phoenix/Files/", fileName);
-
-        file.transferTo(savedFile);
-
-        return savedFile;
-    }
 
 }

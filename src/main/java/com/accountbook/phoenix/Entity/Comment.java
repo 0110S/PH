@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -15,11 +17,15 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    private int refId;
-    private String refType;
+
+    private LocalDateTime time;
+    @JoinColumn(name = "post")
+    private int postId;
     private String comment;
-    @Column(nullable = true)
-    private int commentCount;
+    @Column
+    private int commentCount = 0;
+
+
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_user")

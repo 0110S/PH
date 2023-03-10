@@ -2,7 +2,9 @@ package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTO.CommentRequest;
+import com.accountbook.phoenix.DTOResponse.CommentResponse;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
+import com.accountbook.phoenix.DTOResponse.UserCommentResponseDto;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,53 +38,58 @@ public class CommentServiceImp implements CommentService {
     @Override
     public ResponseEntity<MessageResponse> addCommentToPost(CommentRequest commentRequest) {
         try {
-            Optional<Post> post = postRepository.findById(commentRequest.getRefId());
+
+            User user = utils.getUser();
+            if (user == null) {
+                throw new InvalidUserException(" user not found ");
+            }
+
+            Optional<Post> post = postRepository.findById(commentRequest.getPostId());
             if (post.isEmpty()) {
                 throw new PostNotFoundException(" post not found ");
             }
+
             Comment comment = Comment.builder()
                     .comment(commentRequest.getComment())
-                    .refId(commentRequest.getRefId())
-                    .refType(commentRequest.getRefType())
                     .commentCount(+1)
-                    .user(utils.getUser())
+                    .time(LocalDateTime.now())
+                    .postId(commentRequest.getPostId())
+                    .user(user)
                     .build();
-            if (comment.getUser() == null) {
-                throw new InvalidUserException("user not found");
-            }
             commentRepository.save(comment);
+            CommentResponse commentResponse = new CommentResponse(
+                    comment.getId(),
+                    comment.getTime(),
+                    comment.getComment()
+            );
 
-            List<Object> existingPost= post.
-                    stream()
-                    .map(post1 -> post1.getPost() + post1.getUser().getFirstName() + post1.getUser().getLastName() + post1.getUser().getEmail())
-                    .collect(Collectors.toList());
-            return ResponseEntity.ok(new MessageResponse("success", existingPost));
+            return ResponseEntity.ok(new MessageResponse("success", commentResponse));
         } catch (PostNotFoundException e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getRefId() + " not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getPostId() + " not found"));
         } catch (InvalidUserException e) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest + "user not found "));
         }
     }
 
-
-    @Override
-    public ResponseEntity<MessageResponse> addCommentToComment(CommentRequest commentRequest) {
-        try {
-            Optional<Comment> comment = commentRepository.findById(commentRequest.getRefId());
-            if (comment.isEmpty()) {
-                throw new CommentNotFoundException("comment ot found");
-            }
-            Comment newComment = Comment.builder()
-                    .comment(commentRequest.getComment())
-                    .refId(commentRequest.getRefId())
-                    .refType(commentRequest.getRefType())
-                    .build();
-            commentRepository.save(newComment);
-            return ResponseEntity.ok(new MessageResponse("true", comment));
-        } catch (CommentNotFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getRefId() + " not found"));
-        }
-    }
+//
+//    @Override
+//    public ResponseEntity<MessageResponse> addCommentToComment(CommentRequest commentRequest) {
+//        try {
+//            Optional<Comment> comment = commentRepository.findById(commentRequest.getPostId());
+//            if (comment.isEmpty()) {
+//                throw new CommentNotFoundException("comment ot found");
+//            }
+//            Comment newComment = Comment.builder()
+//                    .comment(commentRequest.getComment())
+//                    .postId(commentRequest.getPostId())
+//                    .refType(commentRequest.getRefType())
+//                    .build();
+//            commentRepository.save(newComment);
+//            return ResponseEntity.ok(new MessageResponse("true", comment));
+//        } catch (CommentNotFoundException exception) {
+//            return ResponseEntity.badRequest().body(new MessageResponse("false", commentRequest.getRefId() + " not found"));
+//        }
+//    }
 
     @Override
     public ResponseEntity<MessageResponse> deleteComment(int postId, int commentId) {
@@ -120,7 +128,21 @@ public class CommentServiceImp implements CommentService {
             if (post.isEmpty()) {
                 throw new PostNotFoundException("post not found ");
             }
-            List<Comment> comments = commentRepository.findAllByRefId(id);
+            List<Comment> comments = commentRepository.findAllByPostId(id);
+            comments.stream().map(comment -> {
+                CommentResponse commentResponse = new CommentResponse(
+                        comment.getId(),
+                        comment.getTime(),
+                        comment.getComment()
+                );
+                UserCommentResponseDto responseDto = new UserCommentResponseDto(
+                        comment.getUser().getId(),
+                        comment.getUser().getFirstName(),
+                        comment.getUser().getLastName(),
+                        String.valueOf(comment.getUser().getProfilePic()),
+                        commentResponse);
+                return responseDto;
+            }).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("true", "response: " + comments));
         } catch (InvalidUserException exception) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", " user not found"));
