@@ -144,7 +144,7 @@ public class CommentServiceImp implements CommentService {
                         commentResponse);
                 return responseDto;
             }).collect(Collectors.toList());
-            return ResponseEntity.ok(new MessageResponse("Successfully",responseDtos));
+            return ResponseEntity.ok(new MessageResponse("Successfully",responseDtos ));
         } catch (InvalidUserException exception) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", " user not found"));
         } catch (PostNotFoundException exception) {

@@ -42,9 +42,6 @@ public class FriendRequestService {
                 throw new InvalidUserException("user and friend cannot be the same");
             }
             FriendRequest friendRequest = friendRequestRepository.findBySenderAndReceiver(sender, receiver.get());
-            boolean isFollowing = friendRequest.isFollowing();
-            boolean isFollower = friendRequest.isFollower();
-
             log.info("friendRequest :: " + friendRequest);
             if (friendRequest == null) {
                 friendRequest = new FriendRequest();
@@ -76,19 +73,14 @@ public class FriendRequestService {
             List<FriendRequest> following = friendRequestRepository.findBySender(utils.getUser());
 
             List<UserResponse> friends = following.stream()
-                    .map(user -> {
-                        return new UserResponse(
-                                user.getReceiver().getId(),
-                                user.getReceiver().getLastName(),
-                                user.getReceiver().getFirstName(),
-                                user.getReceiver().getProfilePic(),
-                                user.getReceiver().isFollow(),
-                                (int) following.stream().count()
-                        );
-                    }).collect(Collectors.toList());
-            if (friends.isEmpty()) {
-                return ResponseEntity.ok(new MessageResponse("true", "no followers found"));
-            }
+                    .map(user -> new UserResponse(
+                            user.getReceiver().getId(),
+                            user.getReceiver().getLastName(),
+                            user.getReceiver().getFirstName(),
+                            user.getReceiver().getProfilePic(),
+                            user.getReceiver().isFollow(),
+                            (int) following.stream().count()
+                    )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("SuccessFull ", friends));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();

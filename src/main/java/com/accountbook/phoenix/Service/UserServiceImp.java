@@ -152,12 +152,8 @@ public class UserServiceImp implements UserService {
             if (existingUser.isEmpty()) {
                 throw new InvalidUserException("user not found");
             }
-
             List<User> users = userRepository.findAll();
             List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
-            if (friends.isEmpty()) {
-                throw new FriendsNotFoundException("no friends are available");
-            }
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
@@ -184,8 +180,6 @@ public class UserServiceImp implements UserService {
             return ResponseEntity.ok(new MessageResponse("Successfully", nonFriendsResponseDtos));
         } catch (InvalidUserException exception) {
             return ResponseEntity.notFound().build();
-        } catch (FriendsNotFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse(exception.getMessage(), null));
         }
     }
 
