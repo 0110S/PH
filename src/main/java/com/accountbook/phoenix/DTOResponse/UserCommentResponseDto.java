@@ -14,6 +14,7 @@ public class UserCommentResponseDto {
     private  int id;
     private String firstName;
     private String lastName;
+    private  String userName;
     private String profilePic;
     private CommentResponse commentsList;
 }

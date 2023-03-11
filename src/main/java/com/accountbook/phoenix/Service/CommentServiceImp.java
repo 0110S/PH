@@ -5,7 +5,6 @@ import com.accountbook.phoenix.DTO.CommentRequest;
 import com.accountbook.phoenix.DTOResponse.CommentResponse;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.accountbook.phoenix.DTOResponse.UserCommentResponseDto;
-import com.accountbook.phoenix.DTOResponse.UserResponseDto;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
@@ -106,7 +105,13 @@ public class CommentServiceImp implements CommentService {
             if (comment.get().getUser().getId() != utils.getUser().getId()) {
                 throw new InvalidUserException(" user not found");
             }
+            CommentResponse commentResponse = new CommentResponse(
+                    comment.get().getId(),
+                    comment.get().getTime(),
+                    comment.get().getComment()
+            );
             commentRepository.delete(comment.get());
+
             return ResponseEntity.ok(new MessageResponse("true", comment.get().getId() + "successfully deleted"));
         } catch (PostNotFoundException e) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", postId));
@@ -140,6 +145,7 @@ public class CommentServiceImp implements CommentService {
                         comment.getUser().getId(),
                         comment.getUser().getFirstName(),
                         comment.getUser().getLastName(),
+                        comment.getUser().getUsername(),
                         String.valueOf(comment.getUser().getProfilePic()),
                         commentResponse);
                 return responseDto;

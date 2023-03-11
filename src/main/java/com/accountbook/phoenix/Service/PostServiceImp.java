@@ -60,6 +60,7 @@ public class PostServiceImp implements PostService {
             userResponseDto.setUserId(post.getUser().getId());
             userResponseDto.setFirstName(post.getUser().getFirstName());
             userResponseDto.setLastName(post.getUser().getLastName());
+            userResponseDto.setUserName(post.getUser().getUsername());
             userResponseDto.setProfilePic(String.valueOf(post.getUser().getProfilePic()));
             PostResponseDto postResponseDto = new PostResponseDto();
             postResponseDto.setPostId(post.getId());
@@ -131,6 +132,7 @@ public class PostServiceImp implements PostService {
             UserResponseDto userResponseDto = new UserResponseDto();
             userResponseDto.setUserId(post.get().getUser().getId());
             userResponseDto.setFirstName(post.get().getUser().getFirstName());
+            userResponseDto.setUserName(post.get().getUser().getUsername());
             userResponseDto.setLastName(post.get().getUser().getLastName());
             userResponseDto.setProfilePic(String.valueOf(post.get().getUser().getProfilePic()));
             // If post is already liked and the user wants to like it again, make it unlike
@@ -206,6 +208,7 @@ public class PostServiceImp implements PostService {
             userResponseDto.setUserId(post.get().getUser().getId());
             userResponseDto.setFirstName(post.get().getUser().getFirstName());
             userResponseDto.setLastName(post.get().getUser().getLastName());
+            userResponseDto.setUserName(post.get().getUser().getUsername());
             userResponseDto.setProfilePic(String.valueOf(post.get().getUser().getProfilePic()));
             PostResponseDto postResponseDto = new PostResponseDto();
             postResponseDto.setPostId(post.get().getId());
@@ -287,6 +290,7 @@ public class PostServiceImp implements PostService {
                         userResponseDto.setFirstName(post.getUser().getFirstName());
                         userResponseDto.setProfilePic(String.valueOf(post.getUser().getProfilePic()));
                         userResponseDto.setLastName(post.getUser().getLastName());
+                        userResponseDto.setUserName(post.getUser().getUsername());
                         userResponseDto.setPost(postResponseDto);
                         return userResponseDto;
                     })

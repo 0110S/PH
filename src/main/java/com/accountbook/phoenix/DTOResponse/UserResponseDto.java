@@ -15,6 +15,7 @@ public class UserResponseDto {
     private int userId;
     private String firstName;
     private String lastName;
+    private String userName;
     private String profilePic;
     private PostResponseDto post;
 }

@@ -77,6 +77,7 @@ public class FriendRequestService {
                             user.getReceiver().getId(),
                             user.getReceiver().getLastName(),
                             user.getReceiver().getFirstName(),
+                            user.getReceiver().getUsername(),
                             user.getReceiver().getProfilePic(),
                             user.getReceiver().isFollow(),
                             (int) following.stream().count()

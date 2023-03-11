@@ -173,6 +173,7 @@ public class UserServiceImp implements UserService {
                                     user.getId(),
                                     user.getFirstName(),
                                     user.getLastName(),
+                                    user.getUsername(),
                                     user.getProfilePic(),
                                     user.isFollow(),
                                     user.getFollowing()
@@ -201,6 +202,7 @@ public class UserServiceImp implements UserService {
                     user.get().getId(),
                     user.get().getFirstName(),
                     user.get().getLastName(),
+                    user.get().getUsername(),
                     user.get().getProfilePic(),
                     user.get().isFollow(),
                     user.get().getFollowing()
