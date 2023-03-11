@@ -27,23 +27,8 @@ public class AuthenticationConfiguration {
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> {
-            try {
-                Optional<User> user = userRepository.findByEmail(username);
-                if (user == null) {
-                    throw new UsernameNotFoundException("User not found");
-                }
-                List<GrantedAuthority> authorities = new ArrayList<>();
-                authorities.add(new SimpleGrantedAuthority(user.get().getRole()));
-                return new org.springframework.security.core.userdetails.User(
-                        user.get().getEmail(),
-                        user.get().getPassword(),
-                        authorities
-                );
-            } catch (UsernameNotFoundException exception) {
-                throw exception;
-            }
-        };
+        return username ->
+            userRepository.findByEmail(username).orElseThrow();
     }
 
 

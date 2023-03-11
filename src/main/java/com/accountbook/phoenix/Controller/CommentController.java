@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/comment")
 @CrossOrigin("*")
 public class CommentController {
-    private final CommentService commentService;
 
+    private final CommentService commentService;
     @PostMapping("/save")
     public ResponseEntity<MessageResponse> addCommentToPost(@RequestBody CommentRequest commentRequest) {
         return commentService.addCommentToPost(commentRequest);

@@ -5,6 +5,7 @@ import com.accountbook.phoenix.DTO.CommentRequest;
 import com.accountbook.phoenix.DTOResponse.CommentResponse;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
 import com.accountbook.phoenix.DTOResponse.UserCommentResponseDto;
+import com.accountbook.phoenix.DTOResponse.UserResponseDto;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
@@ -129,7 +130,7 @@ public class CommentServiceImp implements CommentService {
                 throw new PostNotFoundException("post not found ");
             }
             List<Comment> comments = commentRepository.findAllByPostId(id);
-            comments.stream().map(comment -> {
+           List<UserCommentResponseDto> responseDtos= comments.stream().map(comment -> {
                 CommentResponse commentResponse = new CommentResponse(
                         comment.getId(),
                         comment.getTime(),
@@ -143,7 +144,7 @@ public class CommentServiceImp implements CommentService {
                         commentResponse);
                 return responseDto;
             }).collect(Collectors.toList());
-            return ResponseEntity.ok(new MessageResponse("true", "response: " + comments));
+            return ResponseEntity.ok(new MessageResponse("Successfully",responseDtos));
         } catch (InvalidUserException exception) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", " user not found"));
         } catch (PostNotFoundException exception) {
