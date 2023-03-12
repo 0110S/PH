@@ -17,5 +17,5 @@ public interface PostService {
 
     ResponseEntity<MessageResponse> getAllFriendsPost();
 
-    ResponseEntity<MessageResponse> likePost(int postId);
+//    ResponseEntity<MessageResponse> likePost(int postId);
 }

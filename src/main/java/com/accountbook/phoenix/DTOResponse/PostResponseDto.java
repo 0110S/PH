@@ -10,10 +10,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostResponseDto {
+
     private int postId;
     private String post;
-    private boolean like;
-    private int likeCount;
     private LocalDateTime time;
-    private int commentCount;
+    private  long likeCount;
+    private  long commentCount;
+
 }

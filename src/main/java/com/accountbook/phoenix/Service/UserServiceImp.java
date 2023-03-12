@@ -12,7 +12,6 @@ import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
-import com.accountbook.phoenix.Exception.FriendsNotFoundException;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.UserFoundException;
 import com.accountbook.phoenix.Repository.FriendRequestRepository;
@@ -121,12 +120,14 @@ public class UserServiceImp implements UserService {
     }
 
 
-    public ResponseEntity<?> profile() {
+    public ResponseEntity<MessageResponse> profile() {
         try {
             User user = utils.getUser();
             if (user == null) {
                 throw new Exception("");
             }
+
+            List<FriendRequest> following = friendRequestRepository.findAllBySender(user);
 
             List<Post> posts = postRepository.findAllPostsByUser(user);
             ProfileResponse userData = new ProfileResponse();
@@ -135,11 +136,11 @@ public class UserServiceImp implements UserService {
             userData.setUserName(user.getUsername());
             userData.setEmail(user.getEmail());
             userData.setProfilePic(String.valueOf(user.getProfilePic()));
-            userData.setFollowerCount(user.getFollower());
-            userData.setFollowingCount(user.getFollowing());
+            userData.setFollowerCount((int) following.stream().count());
+            userData.setFollowingCount(following.size());
             userData.setPostCOUNT(posts.stream().count());
 
-            return ResponseEntity.ok(userData);
+            return ResponseEntity.ok(new MessageResponse("Successfully", userData));
         } catch (Exception e) {
             return null;
         }
@@ -153,7 +154,7 @@ public class UserServiceImp implements UserService {
                 throw new InvalidUserException("user not found");
             }
             List<User> users = userRepository.findAll();
-            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
+            List<FriendRequest> friends = friendRequestRepository.findAllBySender(existingUser.get());
             List<User> nonFriends = new ArrayList<>();
             for (User user : users) {
                 boolean isFriend = false;
@@ -174,9 +175,7 @@ public class UserServiceImp implements UserService {
                                     user.getFirstName(),
                                     user.getLastName(),
                                     user.getUsername(),
-                                    user.getProfilePic(),
-                                    user.isFollow(),
-                                    user.getFollowing()
+                                    user.getProfilePic()
                             )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("Successfully", nonFriendsResponseDtos));
         } catch (InvalidUserException exception) {
@@ -203,9 +202,7 @@ public class UserServiceImp implements UserService {
                     user.get().getFirstName(),
                     user.get().getLastName(),
                     user.get().getUsername(),
-                    user.get().getProfilePic(),
-                    user.get().isFollow(),
-                    user.get().getFollowing()
+                    user.get().getProfilePic()
             );
 
             return ResponseEntity.ok(new MessageResponse("profile pic updated successfully ", userResponse));
@@ -217,7 +214,7 @@ public class UserServiceImp implements UserService {
 
     private File saveToFile(MultipartFile file) throws IOException {
         log.info("in the file ");
-        String fileName = UUID.randomUUID().toString() + "-" + file.getOriginalFilename();
+        String fileName = UUID.randomUUID()+ "-" + file.getOriginalFilename();
 
         File savedFile = new File("src/main/java/com/accountbook/phoenix/Files/", fileName);
 

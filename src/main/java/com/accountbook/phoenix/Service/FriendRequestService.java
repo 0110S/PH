@@ -1,8 +1,8 @@
 package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.Utils;
+import com.accountbook.phoenix.DTOResponse.FolowingCount;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
-import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.User;
 import com.accountbook.phoenix.Exception.InvalidUserException;
@@ -55,8 +55,6 @@ public class FriendRequestService {
                 return ResponseEntity.ok("{\n" +
                         "   \"message\": \"Unfollowed user successfully\"\n" +
                         "}");
-            } else {
-                friendRequest.setFollowing(true);
             }
             friendRequestRepository.save(friendRequest);
             return ResponseEntity.ok("{\n" +
@@ -68,19 +66,14 @@ public class FriendRequestService {
     }
 
 
+
     public ResponseEntity<MessageResponse> listOfFriends() {
         try {
-            List<FriendRequest> following = friendRequestRepository.findBySender(utils.getUser());
+            List<FriendRequest> following = friendRequestRepository.findAllBySender(utils.getUser());
 
-            List<UserResponse> friends = following.stream()
-                    .map(user -> new UserResponse(
-                            user.getReceiver().getId(),
-                            user.getReceiver().getLastName(),
-                            user.getReceiver().getFirstName(),
-                            user.getReceiver().getUsername(),
-                            user.getReceiver().getProfilePic(),
-                            user.getReceiver().isFollow(),
-                            (int) following.stream().count()
+            List<FolowingCount> friends = following.stream()
+                    .map(user -> new FolowingCount(
+                            following.size()
                     )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("SuccessFull ", friends));
         } catch (Exception exception) {

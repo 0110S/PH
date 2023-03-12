@@ -16,6 +16,8 @@ public class UserResponse {
     private String lastName;
     private String userName;
     private File profilePic;
-    private boolean following;
-    private  int followingCount;
+
+
+    public UserResponse(int id, String lastName, String firstName, String username, File profilePic, int count) {
+    }
 }

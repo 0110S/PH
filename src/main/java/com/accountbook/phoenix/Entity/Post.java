@@ -19,17 +19,12 @@ public class Post {
     private int id;
     private String post;
     private LocalDateTime localDateTime;
-    private boolean like = false;
-    private boolean dislike = false;
-    private int likeCount = 0;
-    private int postCount = 0;
+    private  boolean like;
+    private  long likeCount;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_post")
     private User user;
-
-    @JoinColumn (name = "user")
-    private int reactedUserId;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "comment", nullable = true, referencedColumnName = "id")

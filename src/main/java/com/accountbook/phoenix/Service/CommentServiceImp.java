@@ -112,7 +112,7 @@ public class CommentServiceImp implements CommentService {
             );
             commentRepository.delete(comment.get());
 
-            return ResponseEntity.ok(new MessageResponse("true", comment.get().getId() + "successfully deleted"));
+            return ResponseEntity.ok(new MessageResponse("true", commentResponse));
         } catch (PostNotFoundException e) {
             return ResponseEntity.badRequest().body(new MessageResponse("false", postId));
         } catch (CommentNotFoundException e) {

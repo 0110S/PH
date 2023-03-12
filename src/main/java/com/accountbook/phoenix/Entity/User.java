@@ -41,15 +41,8 @@ public class User implements UserDetails {
     @Column
     private File profilePic;
 
-    @Column
-    private boolean isFriend;
-    @Column
-    private int follower;
-    @Column
-    private int following;
-
-    private boolean follow = false;
-
+//    private boolean follower;
+//    private boolean follow;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

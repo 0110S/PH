@@ -31,10 +31,6 @@ public class PostController {
         return postService.fetchPostById(id);
     }
 
-    @PutMapping("toggleLike")
-    ResponseEntity<MessageResponse> toggleSwitch(@RequestParam("postId") int postId) {
-        return postService.likePost(postId);
-    }
 
     @GetMapping("/allPosts")
     ResponseEntity<MessageResponse> getAllPosts() throws JsonProcessingException {
