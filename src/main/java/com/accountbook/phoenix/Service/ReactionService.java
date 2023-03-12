@@ -70,8 +70,8 @@ public class ReactionService {
             // If post is already liked and the user wants to like it again, make it unlike
             log.info("friendRequest :: " + reaction);
             if (reaction.isPresent() && reaction.get().isLike()) {
-                post.get().setLike(true);
-                post.get().setLikeCount(-1);
+                post.get().setLike(false);
+                post.get().setLikeCount(Math.max(0, post.get().getLikeCount() - 1));
                 postRepository.save(post.get());
                 reactionRepository.delete(reaction.get());
                 return ResponseEntity.ok("disliked successfully ");
