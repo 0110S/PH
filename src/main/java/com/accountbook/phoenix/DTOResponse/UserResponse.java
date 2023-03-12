@@ -18,6 +18,5 @@ public class UserResponse {
     private File profilePic;
 
 
-    public UserResponse(int id, String lastName, String firstName, String username, File profilePic, int count) {
-    }
+
 }

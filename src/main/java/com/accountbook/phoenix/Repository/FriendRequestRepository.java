@@ -6,12 +6,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
-public interface FriendRequestRepository extends JpaRepository<FriendRequest,Integer> {
+public interface FriendRequestRepository extends JpaRepository<FriendRequest, Integer> {
 
     List<FriendRequest> findAllBySender(User sender);
 
     FriendRequest findBySenderAndReceiver(User sender, User receiver);
+
+
+
+    List<FriendRequest> findAllByReceiverAndFollowingTrue(User receiver);
 }

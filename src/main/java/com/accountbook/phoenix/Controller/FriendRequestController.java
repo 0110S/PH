@@ -23,5 +23,14 @@ public class FriendRequestController {
         return friendRequestService.listOfFriends();
     }
 
+    @GetMapping("/followers")
+    ResponseEntity<MessageResponse> getFollowers() {
+        return friendRequestService.followers();
+    }
+
+    @GetMapping("/followersCount")
+    ResponseEntity<MessageResponse> getFollowersCount() {
+        return friendRequestService.followersCount();
+    }
 
 }
