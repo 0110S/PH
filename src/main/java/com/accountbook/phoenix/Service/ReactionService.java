@@ -67,6 +67,7 @@ public class ReactionService {
             if (reaction.isPresent() && reaction.get().isLike()) {
                 post.get().setLike(false);
                 post.get().setLikeCount(Math.max(0, post.get().getLikeCount() - 1));
+                post.get().setReactedUser(user.getId());
                 postRepository.save(post.get());
                 reactionRepository.delete(reaction.get());
                 return ResponseEntity.ok("{\n" +
@@ -81,13 +82,13 @@ public class ReactionService {
                 newReaction.setLikeCount(+1);
                 post.get().setLike(true);
                 post.get().setLikeCount(+1);
+                post.get().setReactedUser(user.getId());
                 postRepository.save(post.get());
                 reactionRepository.save(newReaction);
                 return ResponseEntity.ok("{\n" +
                         "   \"message\": \"Liked  successfully\"\n" +
                         "}");
             }
-
         } catch (InvalidUserException | PostNotFoundException e) {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage(), null));
         }
