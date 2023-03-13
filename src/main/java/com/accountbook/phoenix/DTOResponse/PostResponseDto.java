@@ -15,6 +15,7 @@ public class PostResponseDto {
     private String post;
     private LocalDateTime time;
     private  long likeCount;
+    private  boolean like;
     private  long commentCount;
 
 }

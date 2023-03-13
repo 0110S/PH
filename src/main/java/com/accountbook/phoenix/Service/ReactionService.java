@@ -59,12 +59,7 @@ public class ReactionService {
                     }).collect(Collectors.toList());
 
 
-            UserResponseDto userResponseDto = new UserResponseDto();
-            userResponseDto.setUserId(user.getId());
-            userResponseDto.setFirstName(user.getFirstName());
-            userResponseDto.setUserName(user.getUsername());
-            userResponseDto.setLastName(user.getLastName());
-            userResponseDto.setProfilePic(String.valueOf(user.getProfilePic()));
+
             Optional<Reaction> reaction = Optional.ofNullable(reactionRepository.findByRefIdAndReactedUser(refId, user));
             log.info("reaction" + reaction);
             // If post is already liked and the user wants to like it again, make it unlike
@@ -74,7 +69,9 @@ public class ReactionService {
                 post.get().setLikeCount(Math.max(0, post.get().getLikeCount() - 1));
                 postRepository.save(post.get());
                 reactionRepository.delete(reaction.get());
-                return ResponseEntity.ok("disliked successfully ");
+                return ResponseEntity.ok("{\n" +
+                        "   \"message\": \"Dislike  successfully\"\n" +
+                        "}");
             } else if (!reaction.isPresent()) {
                 Reaction newReaction = new Reaction();
                 newReaction.setLike(true);
@@ -86,7 +83,9 @@ public class ReactionService {
                 post.get().setLikeCount(+1);
                 postRepository.save(post.get());
                 reactionRepository.save(newReaction);
-                return ResponseEntity.ok("liked Successfully");
+                return ResponseEntity.ok("{\n" +
+                        "   \"message\": \"Liked  successfully\"\n" +
+                        "}");
             }
 
         } catch (InvalidUserException | PostNotFoundException e) {

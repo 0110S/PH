@@ -233,7 +233,7 @@ public class PostServiceImp implements PostService {
                 postResponseDto.setPostId(post.getId());
                 postResponseDto.setPost(post.getPost());
                 postResponseDto.setTime(post.getLocalDateTime());
-
+                postResponseDto.setLike(post.isLike());
                 postResponseDto.setLikeCount(post.getLikeCount());
                 postResponseDto.setCommentCount((int) comment.stream().count());
                 return postResponseDto;
