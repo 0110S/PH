@@ -9,8 +9,6 @@ import com.accountbook.phoenix.Entity.*;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.PostNotFoundException;
 import com.accountbook.phoenix.Repository.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -182,17 +180,12 @@ public class PostServiceImp implements PostService {
                 log.warn("user not found");
                 throw new InvalidUserException("user not found");
             }
-            Reaction reaction = reactionRepository.findByRefIdAndReactedUser(id, post.get().getUser());
+            Reaction reaction = reactionRepository.findByRefIdAndUser(id, post.get().getUser());
             log.info("before reaction");
             log.info("before all comments");
             List<Comment> comment = commentRepository.findAllByPostId(id);
             log.info("after all comments");
-            List<ObjectNode> allComments = comment.stream()
-                    .map(comments -> {
-                        ObjectNode userNode = new ObjectMapper().createObjectNode();
-                        userNode.put("comments", comments.getComment());
-                        return userNode;
-                    }).collect(Collectors.toList());
+
             UserResponseDto userResponseDto = new UserResponseDto();
             userResponseDto.setUserId(post.get().getUser().getId());
             userResponseDto.setFirstName(post.get().getUser().getFirstName());
@@ -203,8 +196,8 @@ public class PostServiceImp implements PostService {
             PostResponseDto postResponseDto = new PostResponseDto();
             postResponseDto.setPostId(post.get().getId());
             postResponseDto.setPost(post.get().getPost());
-            postResponseDto.setLikeCount(reaction.getLikeCount());
-
+            postResponseDto.setLikeCount(post.get().getLikeCount());
+            postResponseDto.setLike(reaction.isLike());
             postResponseDto.setCommentCount((int) comment.stream().count());
             postResponseDto.setTime(post.get().getLocalDateTime());
             userResponseDto.setPost(postResponseDto);
@@ -224,16 +217,28 @@ public class PostServiceImp implements PostService {
                 throw new InvalidUserException("user not found ");
             }
 
+
             List<Post> posts = postRepository.findAllPostsByUser(user.get());
             log.info("posts" + posts);
             List<PostResponseDto> postResponseDtos = posts.stream().map(post -> {
                 List<Comment> comment = commentRepository.findAllByPostId(post.getId());
                 log.info("comment " + comment);
+                Reaction reaction = reactionRepository.findByRefIdAndUser(post.getId(), user.get());
+                log.info("reaction    " + reaction);
                 PostResponseDto postResponseDto = new PostResponseDto();
                 postResponseDto.setPostId(post.getId());
                 postResponseDto.setPost(post.getPost());
                 postResponseDto.setTime(post.getLocalDateTime());
-                postResponseDto.setLike(post.isLike());
+                boolean isLike = false;
+                if (reaction != null) {
+                    isLike = reaction.isLike();
+                }
+                postResponseDto.setLike(isLike);
+                LocalDateTime time = LocalDateTime.parse("");
+                if (reaction != null) {
+                    time = reaction.getLikedTime();
+                }
+                postResponseDto.setLikedTime(time);
                 postResponseDto.setLikeCount(post.getLikeCount());
                 postResponseDto.setCommentCount((int) comment.stream().count());
                 return postResponseDto;
@@ -253,7 +258,7 @@ public class PostServiceImp implements PostService {
             }
 
             List<FriendRequest> friendships = friendRequestRepository.findAllBySender(existingUser.get());
-            log.info("friendships");
+            log.info("friendships" + friendships);
             List<User> friends = new ArrayList<>();
             for (FriendRequest friendship : friendships) {
                 if (friendship.isFollowing()) {
@@ -261,29 +266,37 @@ public class PostServiceImp implements PostService {
                 }
             }
 
+            log.info("friends" + friends);
             List<Post> posts = new ArrayList<>();
             for (User friend : friends) {
                 List<Post> friendPosts = postRepository.findAllPostsByUser(friend);
                 posts.addAll(friendPosts);
             }
-
+            log.info("posts" + posts);
             List<UserResponseDto> userResponse = posts.stream()
                     .map(post -> {
                         List<Comment> comment = commentRepository.findAllByPostId(post.getId());
                         log.info("comment " + comment.stream().count());
 
-                        log.info("postId" + post.getId());
-                        Reaction reaction = reactionRepository.findByRefId(post.getId());
+                        log.info("postId  :" + post.getId());
+                        Reaction reaction = reactionRepository.findByRefIdAndUser(post.getId(), post.getUser());
+
                         log.info("reaction" + reaction);
+
                         UserResponseDto userResponseDto = new UserResponseDto();
-                        userResponseDto.setUserId(existingUser.get().getId());
-                        userResponseDto.setFirstName(existingUser.get().getFirstName());
-                        userResponseDto.setLastName(existingUser.get().getLastName());
-                        userResponseDto.setUserName(existingUser.get().getUsername());
-                        userResponseDto.setProfilePic(String.valueOf(existingUser.get().getProfilePic()));
+                        userResponseDto.setUserId(post.getUser().getId());
+                        userResponseDto.setFirstName(post.getUser().getFirstName());
+                        userResponseDto.setLastName(post.getUser().getLastName());
+                        userResponseDto.setUserName(post.getUser().getUsername());
+                        userResponseDto.setProfilePic(String.valueOf(post.getUser().getProfilePic()));
                         PostResponseDto postResponseDto = new PostResponseDto();
                         postResponseDto.setPostId(post.getId());
                         postResponseDto.setPost(post.getPost());
+                        boolean isLike = false;
+                        if (reaction != null) {
+                            isLike = reaction.isLike();
+                        }
+                        postResponseDto.setLike(isLike);
                         postResponseDto.setTime(post.getLocalDateTime());
                         postResponseDto.setLikeCount(post.getLikeCount());
                         postResponseDto.setCommentCount((int) comment.stream().count());
@@ -291,7 +304,6 @@ public class PostServiceImp implements PostService {
                         return userResponseDto;
                     })
                     .collect(Collectors.toList());
-
             return ResponseEntity.ok(new MessageResponse("successful", userResponse));
         } catch (Exception exception) {
             return ResponseEntity.notFound().build();

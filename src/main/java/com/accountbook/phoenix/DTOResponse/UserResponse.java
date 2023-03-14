@@ -16,6 +16,7 @@ public class UserResponse {
     private String lastName;
     private String userName;
     private File profilePic;
+    private boolean isFriend;
 
 
 

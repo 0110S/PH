@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,11 +19,10 @@ public class Reaction {
     private int refId;
     private String refType;
     private boolean like;
-    private int likeCount;
+    private LocalDateTime likedTime;
 
-    private boolean dislike;
     @JoinColumn(name = "reacted_user")
     @ManyToOne(fetch = FetchType.LAZY,cascade = CascadeType.MERGE)
-    private User reactedUser;
+    private User user;
 
 }

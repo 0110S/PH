@@ -2,7 +2,6 @@ package com.accountbook.phoenix.Service;
 
 import com.accountbook.phoenix.Configuration.Utils;
 import com.accountbook.phoenix.DTOResponse.MessageResponse;
-import com.accountbook.phoenix.DTOResponse.UserResponseDto;
 import com.accountbook.phoenix.Entity.Comment;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.Reaction;
@@ -19,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -58,16 +58,12 @@ public class ReactionService {
                         return userNode;
                     }).collect(Collectors.toList());
 
+            Optional<Reaction> reaction = Optional.ofNullable(reactionRepository.findByRefIdAndUser(refId, user));
 
-
-            Optional<Reaction> reaction = Optional.ofNullable(reactionRepository.findByRefIdAndReactedUser(refId, user));
             log.info("reaction" + reaction);
             // If post is already liked and the user wants to like it again, make it unlike
-            log.info("friendRequest :: " + reaction);
             if (reaction.isPresent() && reaction.get().isLike()) {
-                post.get().setLike(false);
                 post.get().setLikeCount(Math.max(0, post.get().getLikeCount() - 1));
-                post.get().setReactedUser(user.getId());
                 postRepository.save(post.get());
                 reactionRepository.delete(reaction.get());
                 return ResponseEntity.ok("{\n" +
@@ -77,12 +73,10 @@ public class ReactionService {
                 Reaction newReaction = new Reaction();
                 newReaction.setLike(true);
                 newReaction.setRefId(refId);
+                newReaction.setLikedTime(LocalDateTime.now());
                 newReaction.setRefType("post");
-                newReaction.setReactedUser(user);
-                newReaction.setLikeCount(+1);
-                post.get().setLike(true);
-                post.get().setLikeCount(+1);
-                post.get().setReactedUser(user.getId());
+                newReaction.setUser(user);
+                post.get().incrementLikeCount();
                 postRepository.save(post.get());
                 reactionRepository.save(newReaction);
                 return ResponseEntity.ok("{\n" +

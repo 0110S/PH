@@ -135,7 +135,7 @@ public class CommentServiceImp implements CommentService {
                 throw new PostNotFoundException("post not found ");
             }
             List<Comment> comments = commentRepository.findAllByPostId(id);
-           List<UserCommentResponseDto> responseDtos= comments.stream().map(comment -> {
+            List<UserCommentResponseDto> responseDtos = comments.stream().map(comment -> {
                 CommentResponse commentResponse = new CommentResponse(
                         comment.getId(),
                         comment.getTime(),
@@ -150,11 +150,11 @@ public class CommentServiceImp implements CommentService {
                         commentResponse);
                 return responseDto;
             }).collect(Collectors.toList());
-            return ResponseEntity.ok(new MessageResponse("Successfully",responseDtos ));
+            return ResponseEntity.ok(new MessageResponse("Successfully", responseDtos));
         } catch (InvalidUserException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse("false", " user not found"));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", exception.getMessage()));
         } catch (PostNotFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse("false", "post not found "));
+            return ResponseEntity.badRequest().body(new MessageResponse("false", exception.getMessage()));
         }
     }
 }

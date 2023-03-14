@@ -19,16 +19,18 @@ public class Post {
     private int id;
     private String post;
     private LocalDateTime localDateTime;
-    private boolean like;
     private long likeCount;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "user_post")
+    @JoinColumn(name = "posted_user")
     private User user;
-    @JoinColumn(name ="reacted_user")
-    private int reactedUser;
+
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "comment", nullable = true, referencedColumnName = "id")
     private Comment comment;
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
 
 }

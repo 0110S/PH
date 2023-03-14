@@ -15,7 +15,6 @@ public class FriendRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private boolean following = false;
-//    private boolean follower = false;
 
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)

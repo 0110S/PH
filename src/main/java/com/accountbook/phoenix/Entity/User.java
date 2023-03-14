@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -30,28 +31,32 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String lastName;
     @Column(nullable = false, unique = true)
-    private String userName;
+    private String username;
     @Column(nullable = false)
     private String mobileNumber;
     @Column(nullable = false, unique = true)
     private String email;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
     @Column(nullable = false)
     private String password;
     @Column
+    @Lob
     private File profilePic;
 
-//    private boolean follower;
-//    private boolean follow;
+    private boolean isFriend;
+
+    private LocalDateTime createdDate;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role));
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override
     public String getUsername() {
-        return email;
+        return username;
     }
 
 

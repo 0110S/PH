@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,5 +18,7 @@ public class PostResponseDto {
     private  long likeCount;
     private  boolean like;
     private  long commentCount;
+    private LocalDateTime likedTime;
+
 
 }

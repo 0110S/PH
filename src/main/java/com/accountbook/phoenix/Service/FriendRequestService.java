@@ -83,9 +83,13 @@ public class FriendRequestService {
                 friendRequest.setSender(sender);
                 friendRequest.setReceiver(receiver.get());
                 friendRequest.setFollowing(true);
-                friendRequest.setFollower(sender); // Set the follower to the sender
+                receiver.get().setFriend(true);
+                userRepository.save(receiver.get());
+                friendRequest.setFollower(sender);
             } else if (friendRequest != null && friendRequest.isFollowing()) {
                 friendRequest.setFollowing(false);
+                receiver.get().setFriend(false);
+                userRepository.save(receiver.get());
                 friendRequestRepository.delete(friendRequest);
                 return ResponseEntity.ok("{\n" +
                         "   \"message\": \"Unfollowed user successfully\"\n" +
@@ -104,7 +108,6 @@ public class FriendRequestService {
     public ResponseEntity<MessageResponse> listOfFriends() {
         try {
             List<FriendRequest> following = friendRequestRepository.findAllBySender(utils.getUser());
-
             List<FolowingCount> friends = following.stream()
                     .map(user -> new FolowingCount(
                             following.size()
@@ -124,9 +127,7 @@ public class FriendRequestService {
             List<User> followerUsers = followers.stream()
                     .map(FriendRequest::getFollower)
                     .collect(Collectors.toList());
-
             List<UserResponse> users = followerUsers.stream().map(user -> {
-
                 UserResponse userResponse = new UserResponse();
                 userResponse.setId(user.getId());
                 userResponse.setFirstName(user.getFirstName());
@@ -137,7 +138,7 @@ public class FriendRequestService {
             }).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("Success", users));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("fail", null));
+            return ResponseEntity.badRequest().body(new MessageResponse("fail", e.getMessage()));
         }
     }
 
@@ -151,7 +152,7 @@ public class FriendRequestService {
                     )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("SuccessFull ", followerUsers));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new MessageResponse("fail", null));
+            return ResponseEntity.badRequest().body(new MessageResponse("fail", e.getMessage()));
         }
 
     }

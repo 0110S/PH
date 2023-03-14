@@ -12,6 +12,7 @@ import com.accountbook.phoenix.DTOResponse.UserResponse;
 import com.accountbook.phoenix.Entity.FriendRequest;
 import com.accountbook.phoenix.Entity.Post;
 import com.accountbook.phoenix.Entity.User;
+import com.accountbook.phoenix.Entity.UserRole;
 import com.accountbook.phoenix.Exception.InvalidUserException;
 import com.accountbook.phoenix.Exception.UserFoundException;
 import com.accountbook.phoenix.Repository.FriendRequestRepository;
@@ -23,13 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,8 +59,7 @@ public class UserServiceImp implements UserService {
     @Override
     public ResponseEntity<MessageResponse> userRegistration(UserRequest userRequest) {
         try {
-            log.info("" + userRequest);
-            Optional<User> user = userRepository.findByEmail(userRequest.getEmail());
+            Optional<User> user = userRepository.findByEmailOrUsername(userRequest.getEmail(), userRequest.getUserName());
             if (user.isPresent()) {
                 throw new UserFoundException("user already exists");
             }
@@ -67,8 +67,8 @@ public class UserServiceImp implements UserService {
                     .firstName(userRequest.getFirstName())
                     .lastName(userRequest.getLastName())
                     .email(userRequest.getEmail())
-                    .userName(userRequest.getUserName())
-                    .role("USER")
+                    .username(userRequest.getUserName())
+                    .role(UserRole.USER_ROLE)
                     .mobileNumber(userRequest.getMobileNumber())
                     .password(passwordEncoder.encode(userRequest.getPassword()))
                     .build();
@@ -81,41 +81,40 @@ public class UserServiceImp implements UserService {
             userData.setMobileNumber(newUser.getMobileNumber());
             return ResponseEntity.ok(new MessageResponse("user signed successfully", userData));
         } catch (UserFoundException exception) {
-            return ResponseEntity.badRequest().body(new MessageResponse("error in user signIn", null));
+            return ResponseEntity.badRequest().body(new MessageResponse("error in user signIn", exception.getMessage()));
         }
     }
 
     @Override
-    public ResponseEntity<LoginResponse> userLogin(LoginRequest loginRequest) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
-        );
+    public ResponseEntity<MessageResponse> userLogin(LoginRequest loginRequest) {
         try {
-            Optional<User> user = userRepository.findByEmail(loginRequest.getEmail());
+            log.info("in the method ");
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
+            Optional<User> user = userRepository.findByEmailOrUsername(loginRequest.getEmail(), loginRequest.getUsername());
             if (!user.isPresent()) {
                 throw new InvalidUserException("username or password is not valid ");
             }
-            String accessToken = jwtService.generateAccessToken(user.get());
 
+            String accessToken = jwtService.generateAccessToken(user.get());
             UserData userData = new UserData();
             userData.setFirstName(user.get().getFirstName());
             userData.setLastName(user.get().getLastName());
+            userData.setUserName(user.get().getUsername());
             log.info(" user name " + user.get().getUsername());
             userData.setEmail(user.get().getEmail());
             userData.setMobileNumber(user.get().getMobileNumber());
 
             LoginResponse userDtoResponse = new LoginResponse();
-            userDtoResponse.setMessage("Login Successfully ");
             userDtoResponse.setAccessToken(accessToken);
             userDtoResponse.setUserResponse(userData);
-            return ResponseEntity.ok(userDtoResponse);
-        } catch (InvalidUserException exception) {
-            LoginResponse loginResponse = new LoginResponse();
-            loginResponse.setMessage("invalid user ");
-            return ResponseEntity.badRequest().body(loginResponse);
+            return ResponseEntity.ok(new MessageResponse("Successfully", userDtoResponse));
+        } catch (InvalidUserException | AuthenticationException exception) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Fail", exception.getMessage()));
         }
     }
 
@@ -124,11 +123,9 @@ public class UserServiceImp implements UserService {
         try {
             User user = utils.getUser();
             if (user == null) {
-                throw new Exception("");
+                throw new InvalidUserException("user not found");
             }
-
             List<FriendRequest> following = friendRequestRepository.findAllBySender(user);
-
             List<Post> posts = postRepository.findAllPostsByUser(user);
             ProfileResponse userData = new ProfileResponse();
             userData.setFirstName(user.getFirstName());
@@ -141,8 +138,8 @@ public class UserServiceImp implements UserService {
             userData.setPostCOUNT(posts.stream().count());
 
             return ResponseEntity.ok(new MessageResponse("Successfully", userData));
-        } catch (Exception e) {
-            return null;
+        } catch (InvalidUserException e) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Fail", e.getMessage()));
         }
     }
 
@@ -154,28 +151,20 @@ public class UserServiceImp implements UserService {
                 throw new InvalidUserException("user not found");
             }
             List<User> users = userRepository.findAll();
-            List<FriendRequest> friends = friendRequestRepository.findAllBySender(existingUser.get());
-            List<User> nonFriends = new ArrayList<>();
-            for (User user : users) {
-                boolean isFriend = false;
-                for (FriendRequest friend : friends) {
-                    if (friend.getReceiver().getId() == user.getId()) {
-                        isFriend = true;
-                        break;
-                    }
-                }
-                if (!isFriend && user.getId() != existingUser.get().getId()) {
-                    nonFriends.add(user);
-                }
-            }
+
+            List<User> userList = users.stream()
+                    .filter(user -> user.getId() != existingUser.get().getId())
+                    .collect(Collectors.toList());
+
             List<UserResponse> nonFriendsResponseDtos =
-                    nonFriends.stream()
+                    userList.stream()
                             .map(user -> new UserResponse(
                                     user.getId(),
                                     user.getFirstName(),
                                     user.getLastName(),
                                     user.getUsername(),
-                                    user.getProfilePic()
+                                    user.getProfilePic(),
+                                    user.isFriend()
                             )).collect(Collectors.toList());
             return ResponseEntity.ok(new MessageResponse("Successfully", nonFriendsResponseDtos));
         } catch (InvalidUserException exception) {
@@ -202,7 +191,8 @@ public class UserServiceImp implements UserService {
                     user.get().getFirstName(),
                     user.get().getLastName(),
                     user.get().getUsername(),
-                    user.get().getProfilePic()
+                    user.get().getProfilePic(),
+                    user.get().isFriend()
             );
 
             return ResponseEntity.ok(new MessageResponse("profile pic updated successfully ", userResponse));
@@ -214,7 +204,7 @@ public class UserServiceImp implements UserService {
 
     private File saveToFile(MultipartFile file) throws IOException {
         log.info("in the file ");
-        String fileName = UUID.randomUUID()+ "-" + file.getOriginalFilename();
+        String fileName = UUID.randomUUID() + "-" + file.getOriginalFilename();
 
         File savedFile = new File("src/main/java/com/accountbook/phoenix/Files/", fileName);
 
@@ -222,59 +212,6 @@ public class UserServiceImp implements UserService {
 
         return savedFile;
     }
-
-
-//    public ResponseEntity<?> fetchAllUsersPosts() {
-//        try {
-//            Optional<User> existingUser = userRepository.findById(utils.getUser().getId());
-//            if (existingUser.isEmpty()) {
-//                throw new InvalidUserException("user not found");
-//            }
-//
-//            List<User> users = userRepository.findAll();
-//            List<FriendRequest> friends = friendRequestRepository.findBySender(existingUser.get());
-//
-//
-//            List<User> friendUsers = friends.stream()
-//                    .flatMap(fr -> Stream.of(fr.getSender(), fr.getReceiver()))
-//                    .distinct()
-//                    .collect(Collectors.toList());
-//
-//            List<Post> friendPosts = friendUsers.stream()
-//                    .map(u -> postRepository.findByUser(u))
-//                    .collect(Collectors.toList());
-//
-//            List<UserResponseDto> userResponseDtos = friendPosts.stream()
-//                    .map(post -> {
-//                        List<PostResponseDto> postResponse = new ArrayList<>();
-//                        PostResponseDto postResponseDto = new PostResponseDto();
-//                        postResponseDto.setPostId(post.getId());
-//                        postResponseDto.setPost(post.getPost());
-//                        postResponseDto.setTime(post.getLocalDateTime());
-//                        postResponseDto.setLikeCount(post.getLikeCount());
-//                        postResponseDto.setLike(post.isLike());
-//                        int commentCount = 0;
-//                        if (post.getComment() != null) {
-//                            commentCount = post.getComment().getCommentCount();
-//                        }
-//                        postResponseDto.setCommentCount(commentCount);
-//                        postResponse.add(postResponseDto);
-//                        UserResponseDto userResponseDto = new UserResponseDto();
-//                        userResponseDto.setUserId(post.getUser().getId());
-//                        userResponseDto.setFirstName(post.getUser().getFirstName());
-//                        userResponseDto.setProfilePic(post.getUser().getProfilePic());
-//                        userResponseDto.setLastName(post.getUser().getLastName());
-//                        userResponseDto.setPosts(postResponse);
-//                        return userResponseDto;
-//                    })
-//                    .collect(Collectors.toList());
-//
-//            return ResponseEntity.ok(new MessageResponse("Successful", userResponseDtos));
-//        } catch (InvalidUserException exception) {
-//
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
 
 
 }

@@ -7,13 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ReactionRepository  extends JpaRepository<Reaction,Integer> {
-    Reaction findByRefIdAndReactedUser(int refId, User userId);
+    Reaction findByRefIdAndUser(int refId, User user);
 
     @Query("SELECT r FROM Reaction r WHERE r.refId = :id")
     Reaction findByRefId(int id);
+
     List<Reaction> findALlByRefId(int id);
 }
